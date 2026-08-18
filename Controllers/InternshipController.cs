@@ -1,0 +1,68 @@
+﻿using InternScope.DTOs.Internship;
+using InternScope.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+[Authorize]
+[ApiController]
+[Route("internship")]
+public class InternshipController : ControllerBase
+{
+    private readonly InternshipService _internshipService;
+
+    public InternshipController(InternshipService internshipService)
+    {
+        _internshipService = internshipService;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] InternshipInputModel input)
+    {
+        var userIdClaim = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null) return Unauthorized();
+
+        try
+        {
+            var userId = Guid.Parse(userIdClaim);
+            var internshipId = await _internshipService.CreateInternshipAsync(userId, input);
+
+            return Ok(new
+            {
+                id = internshipId,
+                message = "Staj değerlendirmeniz alındı. Admin onayından sonra yayınlanacaktır."
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+
+
+
+
+    }
+
+
+
+    [HttpGet]
+    public async Task<IActionResult> GetApproved()
+    {
+        var list = await _internshipService.GetApprovedInternshipsAsync();
+        return Ok(list);
+    }
+
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMine()
+    {
+        var userIdClaim = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
+        var list = await _internshipService.GetMyInternshipsAsync(userId);
+        return Ok(list);
+    }
+}

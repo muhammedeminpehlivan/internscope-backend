@@ -1,0 +1,54 @@
+﻿using AutoMapper;
+using InternScope.DTOs.Auth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("auth")]
+public class AuthController : ControllerBase
+{
+    private readonly AuthService _authService;
+    private readonly IMapper _mapper;
+
+    public AuthController(AuthService authService, IMapper mapper)
+    {
+        _authService = authService;
+        _mapper = mapper;
+    }
+
+    [HttpGet("login")]
+    public IActionResult Login()
+    {
+        return Challenge(new AuthenticationProperties
+        {
+            RedirectUri = "/auth/success"
+        }, "LinkedIn");
+    }
+
+    [HttpGet("success")]
+    public async Task<IActionResult> Success()
+    {
+        var authResult = await HttpContext.AuthenticateAsync("Cookies");
+        if (!authResult.Succeeded) return Unauthorized();
+
+        var claims = authResult.Principal.Claims;
+
+        var linkedInId = claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+        var fullName = claims.FirstOrDefault(c => c.Type == "name")?.Value;
+        var email = claims.FirstOrDefault(c => c.Type == "email")?.Value;
+        var picture = claims.FirstOrDefault(c => c.Type == "picture")?.Value;
+
+        if (linkedInId == null) return Unauthorized();
+
+        var input = new AuthInputModel
+        {
+            LinkedInId = linkedInId,
+            FullName = fullName,
+            Email = email,
+            ProfilePictureUrl = picture
+        };
+
+        var result = await _authService.HandleLinkedInLoginAsync(input);
+        return Ok(result);
+    }
+}
