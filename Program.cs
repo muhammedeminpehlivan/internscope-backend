@@ -6,7 +6,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -56,11 +60,8 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<InternshipService>();
 
-// DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddDataProtection();
-
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -124,14 +125,14 @@ IssuerSigningKey = new SymmetricSecurityKey(
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
+
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "InternScope API v1");
     });
-}
+
 
 app.UseCookiePolicy(new CookiePolicyOptions
 {
