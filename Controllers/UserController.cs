@@ -40,4 +40,28 @@ public class UserController : ControllerBase
 
         return Ok(new { message = "Mail başarıyla doğrulandı!" });
     }
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe()
+    {
+        var userIdClaim = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
+        var user = await _userService.GetByIdAsync(userId);
+
+        if (user == null) return NotFound();
+
+        return Ok(new   
+        {
+            id = user.Id,
+            fullName = user.FullName,
+            email = user.Email,
+            studentEmail = user.StudentEmail,
+            isEmailVerified = user.IsEmailVerified,
+            profilePictureUrl = user.ProfilePictureUrl,
+            role = user.Role.ToString()
+        });
+    }
 }

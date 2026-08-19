@@ -1,4 +1,6 @@
-﻿public class UserService
+﻿using InternScope.Entities;
+
+public class UserService
 {
     private readonly AppDbContext _context;
     private readonly EmailService _emailService;
@@ -58,4 +60,9 @@
         await _context.SaveChangesAsync();
         return true;
     }
+    public async Task<User?> GetByIdAsync(Guid userId)
+    {
+        return await _context.Users.FindAsync(userId);
+    }
+
 }

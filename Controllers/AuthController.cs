@@ -9,14 +9,17 @@ public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
     private readonly IMapper _mapper;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(AuthService authService, IMapper mapper)
+
+    public AuthController(AuthService authService, IMapper mapper, IConfiguration configuration)
     {
         _authService = authService;
         _mapper = mapper;
+        _configuration = configuration;
     }
 
-    [HttpGet("login")]
+        [HttpGet("login")]
     public IActionResult Login()
     {
         return Challenge(new AuthenticationProperties
@@ -49,6 +52,7 @@ public class AuthController : ControllerBase
         };
 
         var result = await _authService.HandleLinkedInLoginAsync(input);
-        return Ok(result);
+        var frontendUrl = _configuration["Frontend:BaseUrl"];
+        return Redirect($"{frontendUrl}/auth/callback?token={result.Token}");
     }
 }
