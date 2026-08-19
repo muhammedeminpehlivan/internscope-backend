@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using InternScope.DTOs;
 using InternScope.DTOs.Auth;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
@@ -27,5 +28,21 @@ public class MappingProfile : Profile
             .ForMember(d => d.Interview, o => o.MapFrom(s => s.InterviewProcess))
             .ForMember(d => d.AuthorName,
                 o => o.MapFrom(s => s.IsAnonymous ? "Anonim Kullanıcı" : s.User.FullName));
+        //University ve Department mapping
+        CreateMap<University, UniversityOutputModel>();
+        CreateMap<Department, DepartmentOutputModel>();
+
+        //Admin için Internship mapping
+        CreateMap<Internship, AdminInternshipOutputModel>()
+    .ForMember(d => d.CompanyName, o => o.MapFrom(s => s.Company.Name))
+    .ForMember(d => d.UniversityName, o => o.MapFrom(s => s.University.Name))
+    .ForMember(d => d.DepartmentName, o => o.MapFrom(s => s.Department.Name))
+    .ForMember(d => d.RealAuthorName, o => o.MapFrom(s => s.User.FullName))
+    .ForMember(d => d.AuthorEmail, o => o.MapFrom(s => s.User.Email))
+    .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
+    .ForMember(d => d.Scores, o => o.MapFrom(s => s.Score))
+    .ForMember(d => d.Interview, o => o.MapFrom(s => s.InterviewProcess));
+
+
     }
 }
