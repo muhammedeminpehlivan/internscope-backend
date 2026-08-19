@@ -8,7 +8,7 @@ namespace InternScope.DTOs.Internship
     {
         public string CompanyName { get; set; }        
         public Guid UniversityId { get; set; }
-        public Guid DepartmentId { get; set; }
+        public string DepartmentName { get; set; }
         public string CompanyDepartment { get; set; }  
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -79,5 +79,9 @@ namespace InternScope.DTOs.Internship
         public string DifficultyLevel { get; set; }
         public string? Description { get; set; }
     }
+
+
+
+
 }
 

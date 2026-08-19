@@ -11,13 +11,16 @@ namespace InternScope.Services
     {
         private readonly AppDbContext _context;
         private readonly CompanyService _companyService;
+        private readonly DepartmentService _departmentService;
+
         private readonly IMapper _mapper;
 
-        public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper)
+        public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper, DepartmentService departmentService)
         {
             _context = context;
             _companyService = companyService;
             _mapper = mapper;
+            _departmentService = departmentService;
         }
 
         public async Task<Guid> CreateInternshipAsync(Guid userId, InternshipInputModel input)
@@ -31,6 +34,7 @@ namespace InternScope.Services
 
             // 2. Firmayı bul veya oluştur
             var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
+            var department = await _departmentService.GetOrCreateByNameAsync(input.DepartmentName);
 
             // 3. Staj kaydını oluştur
             var internship = new Internship
@@ -39,7 +43,7 @@ namespace InternScope.Services
                 UserId = userId,
                 CompanyId = company.Id,
                 UniversityId = input.UniversityId,
-                DepartmentId = input.DepartmentId,
+                DepartmentId = department.Id,
                 CompanyDepartment = input.CompanyDepartment,
                 StartDate = input.StartDate,
                 EndDate = input.EndDate,

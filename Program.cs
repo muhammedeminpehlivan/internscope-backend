@@ -62,6 +62,10 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<InternshipService>();
+builder.Services.AddScoped<UniversityService>();
+builder.Services.AddScoped<DepartmentService>();
+builder.Services.AddScoped<AdminService>();
+
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -93,16 +97,17 @@ options.Cookie.HttpOnly = true;
     options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
 
-{
-ValidateIssuer = true,
-ValidateAudience = true,
-ValidateLifetime = true,
-ValidateIssuerSigningKey = true,
-ValidIssuer = builder.Configuration["Jwt:Issuer"],
-ValidAudience = builder.Configuration["Jwt:Audience"],
-IssuerSigningKey = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-};
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        RoleClaimType = "role"
+    };
 })
 
 // ...
@@ -137,6 +142,12 @@ IssuerSigningKey = new SymmetricSecurityKey(
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    DbInitializer.SeedUniversities(context);
+}
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
