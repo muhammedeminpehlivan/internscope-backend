@@ -64,6 +64,7 @@ builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<InternshipService>();
 builder.Services.AddScoped<UniversityService>();
 builder.Services.AddScoped<DepartmentService>();
+builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<AdminService>();
 
 
