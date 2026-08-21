@@ -40,8 +40,6 @@ public class InternshipController : ControllerBase
         }
 
 
-
-
     }
 
 
@@ -64,5 +62,26 @@ public class InternshipController : ControllerBase
         var userId = Guid.Parse(userIdClaim);
         var list = await _internshipService.GetMyInternshipsAsync(userId);
         return Ok(list);
+    }
+
+
+
+    [HttpPost("{id}/sgk")]
+    public async Task<IActionResult> UploadSgk(Guid id, IFormFile file, [FromForm] string verificationCode)
+    {
+        var userIdClaim = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        try
+        {
+            var userId = Guid.Parse(userIdClaim);
+            await _internshipService.UploadSgkAsync(userId, id, file, verificationCode);
+            return Ok(new { message = "SGK belgesi ve doğrulama kodu yüklendi. Admin onayı bekleniyor." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

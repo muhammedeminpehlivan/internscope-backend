@@ -22,11 +22,23 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("{id}/approve")]
-    public async Task<IActionResult> Approve(Guid id)
+    public async Task<IActionResult> Approve(Guid id, [FromQuery] bool verifySgk = false)
     {
-        var ok = await _adminService.ApproveAsync(id);
-        if (!ok) return NotFound(new { message = "Staj bulunamadı." });
-        return Ok(new { message = "Staj onaylandı." });
+        try
+        {
+            var ok = await _adminService.ApproveAsync(id, verifySgk);
+            if (!ok) return NotFound(new { message = "Staj bulunamadı." });
+            return Ok(new
+            {
+                message = verifySgk
+                ? "Staj onaylandı ve SGK doğrulandı — kesinleşmiş staj. ✓"
+                : "Staj onaylandı."
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}/reject")]

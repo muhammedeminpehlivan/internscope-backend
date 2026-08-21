@@ -12,15 +12,16 @@ namespace InternScope.Services
         private readonly AppDbContext _context;
         private readonly CompanyService _companyService;
         private readonly DepartmentService _departmentService;
-
+        private readonly CloudinaryService _cloudinaryService;
         private readonly IMapper _mapper;
 
-        public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper, DepartmentService departmentService)
+        public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper, DepartmentService departmentService, CloudinaryService cloudinaryService)
         {
             _context = context;
             _companyService = companyService;
             _mapper = mapper;
             _departmentService = departmentService;
+            _cloudinaryService = cloudinaryService;
         }
 
         public async Task<Guid> CreateInternshipAsync(Guid userId, InternshipInputModel input)
@@ -92,6 +93,23 @@ namespace InternScope.Services
                 .OrderByDescending(i => i.CreatedAt)
                 .ProjectTo<InternshipOutputModel>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+        }
+
+        public async Task UploadSgkAsync(Guid userId, Guid internshipId, IFormFile file, string verificationCode)
+        {
+            var internship = await _context.Internships.FindAsync(internshipId);
+            if (internship == null)
+                throw new Exception("Staj bulunamadı.");
+            if (internship.UserId != userId)
+                throw new Exception("Bu staj size ait değil.");
+            if (string.IsNullOrWhiteSpace(verificationCode))
+                throw new Exception("Belge doğrulama kodu gerekli.");
+
+            var url = await _cloudinaryService.UploadSgkDocumentAsync(file);
+            internship.SgkDocumentUrl = url;
+            internship.SgkVerificationCode = verificationCode.Trim();
+            internship.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
         }
 
     }
