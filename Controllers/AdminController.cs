@@ -63,4 +63,33 @@ public class AdminController : ControllerBase
         if (!ok) return NotFound(new { message = "Staj bulunamadı." });
         return Ok(new { message = "Staj kalıcı olarak silindi." });
     }
+
+
+
+    [HttpGet("pending-changes")]
+    public async Task<IActionResult> GetPendingChanges()
+    {
+        var list = await _adminService.GetPendingChangesAsync();
+        return Ok(list);
+    }
+
+    [HttpPut("{id}/approve-changes")]
+    public async Task<IActionResult> ApproveChanges(Guid id)
+    {
+        try
+        {
+            var ok = await _adminService.ApprovePendingChangesAsync(id);
+            if (!ok) return NotFound(new { message = "Staj bulunamadı." });
+            return Ok(new { message = "Düzenleme onaylandı, staj güncellendi." });
+        }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpPut("{id}/reject-changes")]
+    public async Task<IActionResult> RejectChanges(Guid id)
+    {
+        var ok = await _adminService.RejectPendingChangesAsync(id);
+        if (!ok) return NotFound(new { message = "Staj bulunamadı." });
+        return Ok(new { message = "Düzenleme reddedildi, eski hali korundu." });
+    }
 }

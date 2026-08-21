@@ -13,6 +13,11 @@ namespace InternScope.DTOs.Internship
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsAnonymous { get; set; }
+        public InternshipTerm Term { get; set; }
+        public int? StipendMin { get; set; }
+        public int? StipendMax { get; set; }
+        public string Currency { get; set; } = "TRY";
+        public bool ReturnOfferReceived { get; set; }
 
         public ScoreInputModel Scores { get; set; }
         public InterviewInputModel Interview { get; set; }
@@ -33,8 +38,6 @@ namespace InternScope.DTOs.Internship
     {
         public ApplicationMethod ApplicationMethod { get; set; }
         public int StageCount { get; set; }
-        public int? DurationDays { get; set; }
-        public DifficultyLevel DifficultyLevel { get; set; }
         public string? Description { get; set; }
     }
 
@@ -52,6 +55,11 @@ namespace InternScope.DTOs.Internship
         public bool IsAnonymous { get; set; }
         public bool IsSgkVerified { get; set; }
         public string Status { get; set; }
+        public string Term { get; set; }
+        public int? StipendMin { get; set; }
+        public int? StipendMax { get; set; }
+        public string Currency { get; set; }
+        public bool ReturnOfferReceived { get; set; }
 
         // Anonim ise "Anonim Kullanıcı", değilse gerçek ad
         public string AuthorName { get; set; }
@@ -75,8 +83,6 @@ namespace InternScope.DTOs.Internship
     {
         public string ApplicationMethod { get; set; }
         public int StageCount { get; set; }
-        public int? DurationDays { get; set; }
-        public string DifficultyLevel { get; set; }
         public string? Description { get; set; }
     }
 

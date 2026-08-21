@@ -24,6 +24,7 @@ public class MappingProfile : Profile
             .ForMember(d => d.UniversityName, o => o.MapFrom(s => s.University.Name))
             .ForMember(d => d.DepartmentName, o => o.MapFrom(s => s.Department.Name))
             .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
+            .ForMember(d => d.Term, o => o.MapFrom(s => s.Term.ToString()))
             .ForMember(d => d.Scores, o => o.MapFrom(s => s.Score))
             .ForMember(d => d.Interview, o => o.MapFrom(s => s.InterviewProcess))
             .ForMember(d => d.AuthorName,
@@ -40,6 +41,7 @@ public class MappingProfile : Profile
     .ForMember(d => d.RealAuthorName, o => o.MapFrom(s => s.User.FullName))
     .ForMember(d => d.AuthorEmail, o => o.MapFrom(s => s.User.Email))
     .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
+    .ForMember(d => d.Term, o => o.MapFrom(s => s.Term.ToString()))
     .ForMember(d => d.Scores, o => o.MapFrom(s => s.Score))
     .ForMember(d => d.Interview, o => o.MapFrom(s => s.InterviewProcess));
 

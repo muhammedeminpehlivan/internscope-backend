@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using InternScope.DTOs;
+using InternScope.DTOs.Internship;
 using InternScope.Entities;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services
@@ -10,11 +12,13 @@ namespace InternScope.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly InternshipService _internshipService;
 
-        public AdminService(AppDbContext context, IMapper mapper)
+        public AdminService(AppDbContext context, IMapper mapper, InternshipService internshipService   )
         {
             _context = context;
             _mapper = mapper;
+            _internshipService = internshipService;
         }
 
         public async Task<List<AdminInternshipOutputModel>> GetPendingAsync()
@@ -87,6 +91,65 @@ namespace InternScope.Services
                 _context.InternshipAnswers.RemoveRange(internship.Answers);
 
             _context.Internships.Remove(internship);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
+
+        public async Task<List<PendingChangeReviewModel>> GetPendingChangesAsync()
+        {
+            var currentList = await _context.Internships
+                .Where(i => i.HasPendingChanges)
+                .OrderBy(i => i.UpdatedAt)
+                .ProjectTo<AdminInternshipOutputModel>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            var jsonMap = await _context.Internships
+                .Where(i => i.HasPendingChanges)
+                .Select(i => new { i.Id, i.PendingChangesJson })
+                .ToDictionaryAsync(x => x.Id, x => x.PendingChangesJson);
+
+            return currentList.Select(c => new PendingChangeReviewModel
+            {
+                Current = c,
+                Proposed = jsonMap.TryGetValue(c.Id, out var json) && json != null
+                    ? JsonSerializer.Deserialize<InternshipInputModel>(json)
+                    : null
+            }).ToList();
+        }
+
+
+
+        public async Task<bool> ApprovePendingChangesAsync(Guid id)
+        {
+            var internship = await _context.Internships
+                .Include(i => i.Score)
+                .Include(i => i.InterviewProcess)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (internship == null) return false;
+            if (!internship.HasPendingChanges || internship.PendingChangesJson == null)
+                throw new Exception("Bekleyen değişiklik yok.");
+
+            var changes = JsonSerializer.Deserialize<InternshipInputModel>(internship.PendingChangesJson);
+            await _internshipService.ApplyInputAsync(internship, changes);
+
+            internship.HasPendingChanges = false;
+            internship.PendingChangesJson = null;
+            internship.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RejectPendingChangesAsync(Guid id)
+        {
+            var internship = await _context.Internships.FindAsync(id);
+            if (internship == null) return false;
+
+            internship.HasPendingChanges = false;
+            internship.PendingChangesJson = null;   // değişikliği at, eski hali kalır
+            internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }

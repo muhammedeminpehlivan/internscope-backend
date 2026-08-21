@@ -18,5 +18,19 @@ namespace InternScope.DTOs
         public InterviewOutputModel Interview { get; set; }
         public string SgkDocumentUrl { get; set; }
         public string SgkVerificationCode { get; set; }
+        public bool HasPendingChanges { get; set; }
+        public string Term { get; set; }
+        public int? StipendMin { get; set; }
+        public int? StipendMax { get; set; }
+        public string Currency { get; set; }
+        public bool ReturnOfferReceived { get; set; }
+    }
+
+
+
+    public class PendingChangeReviewModel
+    {
+        public AdminInternshipOutputModel Current { get; set; }
+        public InternshipInputModel Proposed { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using InternScope.DTOs.Internship;
 using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
+using System.Text.Json;
 
 namespace InternScope.Services
 {
@@ -49,6 +50,11 @@ namespace InternScope.Services
                 StartDate = input.StartDate,
                 EndDate = input.EndDate,
                 IsAnonymous = input.IsAnonymous,
+                Term = input.Term,
+                StipendMin = input.StipendMin,
+                StipendMax = input.StipendMax,
+                Currency = string.IsNullOrWhiteSpace(input.Currency) ? "TRY" : input.Currency,
+                ReturnOfferReceived = input.ReturnOfferReceived,
                 IsSgkVerified = false,             // SGK yükleme ayrı adım
                 Status = InternshipStatus.Pending, // admin onayı bekleyecek
                 CreatedAt = DateTime.UtcNow
@@ -110,6 +116,74 @@ namespace InternScope.Services
             internship.SgkVerificationCode = verificationCode.Trim();
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+        }
+
+        // Kullanıcı stajını düzenler
+        public async Task UpdateAsync(Guid userId, Guid internshipId, InternshipInputModel input)
+        {
+            var internship = await _context.Internships
+                .Include(i => i.Score)
+                .Include(i => i.InterviewProcess)
+                .FirstOrDefaultAsync(i => i.Id == internshipId);
+
+            if (internship == null)
+                throw new Exception("Staj bulunamadı.");
+            if (internship.UserId != userId)
+                throw new Exception("Bu staj size ait değil.");
+
+            if (internship.Status == InternshipStatus.Approved)
+            {
+                // Onaylı → canlı hali dursun, değişikliği beklet
+                internship.PendingChangesJson = JsonSerializer.Serialize(input);
+                internship.HasPendingChanges = true;
+            }
+            else
+            {
+                // Pending/Rejected → zaten yayında değil, direkt uygula + tekrar onaya
+                await ApplyInputAsync(internship, input);
+                internship.Status = InternshipStatus.Pending;
+            }
+
+            internship.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+
+        // Ortak: bir InternshipInputModel'i mevcut stajın üstüne uygular
+        public async Task ApplyInputAsync(Internship internship, InternshipInputModel input)
+        {
+            var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
+            var department = await _departmentService.GetOrCreateByNameAsync(input.DepartmentName);
+
+            internship.CompanyId = company.Id;
+            internship.UniversityId = input.UniversityId;
+            internship.DepartmentId = department.Id;
+            internship.CompanyDepartment = input.CompanyDepartment;
+            internship.StartDate = input.StartDate;
+            internship.EndDate = input.EndDate;
+            internship.IsAnonymous = input.IsAnonymous;
+            internship.Term = input.Term;
+            internship.StipendMin = input.StipendMin;
+            internship.StipendMax = input.StipendMax;
+            internship.Currency = string.IsNullOrWhiteSpace(input.Currency) ? "TRY" : input.Currency;
+            internship.ReturnOfferReceived = input.ReturnOfferReceived;
+
+            if (internship.Score != null)
+            {
+                internship.Score.LearningScore = input.Scores.LearningScore;
+                internship.Score.MentoringScore = input.Scores.MentoringScore;
+                internship.Score.TechInfraScore = input.Scores.TechInfraScore;
+                internship.Score.WorkEnvironmentScore = input.Scores.WorkEnvironmentScore;
+                internship.Score.SalaryScore = input.Scores.SalaryScore;
+                internship.Score.WouldRecommend = input.Scores.WouldRecommend;
+                internship.Score.AdditionalTips = input.Scores.AdditionalTips;
+            }
+
+            if (internship.InterviewProcess != null)
+            {
+                internship.InterviewProcess.ApplicationMethod = input.Interview.ApplicationMethod;
+                internship.InterviewProcess.StageCount = input.Interview.StageCount;
+                internship.InterviewProcess.Description = input.Interview.Description;
+            }
         }
 
     }

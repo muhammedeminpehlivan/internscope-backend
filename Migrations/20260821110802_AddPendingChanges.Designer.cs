@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InternScope.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260821110802_AddPendingChanges")]
+    partial class AddPendingChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,10 +98,6 @@ namespace InternScope.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uuid");
 
@@ -117,9 +116,6 @@ namespace InternScope.Migrations
                     b.Property<string>("PendingChangesJson")
                         .HasColumnType("text");
 
-                    b.Property<bool>("ReturnOfferReceived")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("SgkDocumentUrl")
                         .HasColumnType("text");
 
@@ -130,15 +126,6 @@ namespace InternScope.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("StipendMax")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("StipendMin")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Term")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("UniversityId")
@@ -254,6 +241,12 @@ namespace InternScope.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
+
+                    b.Property<int>("DifficultyLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DurationDays")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("InternshipId")
                         .HasColumnType("uuid");
