@@ -43,8 +43,29 @@ public class InternshipController : ControllerBase
     }
 
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] InternshipInputModel input)
+    {
+        var userIdClaim = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        try
+        {
+            var userId = Guid.Parse(userIdClaim);
+            await _internshipService.UpdateAsync(userId, id, input);
+            return Ok(new { message = "Düzenlemeniz alındı. Admin onayına kadar eski haliniz yayında kalacak." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetApproved()
     {
         var list = await _internshipService.GetApprovedInternshipsAsync();
