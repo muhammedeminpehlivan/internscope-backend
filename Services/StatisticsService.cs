@@ -83,6 +83,11 @@ namespace InternScope.Services
                 })
                 .ToListAsync();
 
+            var returnOffers = await _context.Internships
+                .Where(i => i.Status == InternshipStatus.Approved)
+                .Select(i => i.ReturnOfferReceived)
+                .ToListAsync();
+
             return new OverallStatOutputModel
             {
                 TotalApprovedReviews = scores.Count,
@@ -91,8 +96,32 @@ namespace InternScope.Services
                 OverallAverageScore = scores.Any()
                     ? scores.Average(x => (x.LearningScore + x.MentoringScore + x.TechInfraScore
                         + x.WorkEnvironmentScore + x.SalaryScore) / 5.0)
+                    : 0,
+                ReturnOfferRate = returnOffers.Count > 0
+                    ? Math.Round((double)returnOffers.Count(x => x) / returnOffers.Count * 100, 1)
                     : 0
             };
+        }
+
+        public async Task<List<ApplicationMethodStatOutputModel>> GetApplicationMethodStatsAsync()
+        {
+            var data = await _context.Internships
+                .Where(i => i.Status == InternshipStatus.Approved && i.InterviewProcess != null)
+                .Select(i => i.InterviewProcess.ApplicationMethod)
+                .ToListAsync();
+
+            var total = data.Count;
+
+            return data
+                .GroupBy(m => m)
+                .Select(g => new ApplicationMethodStatOutputModel
+                {
+                    Method = g.Key.ToString(),
+                    Count = g.Count(),
+                    Percentage = total > 0 ? Math.Round((double)g.Count() / total * 100, 1) : 0
+                })
+                .OrderByDescending(s => s.Count)
+                .ToList();
         }
     }
 }

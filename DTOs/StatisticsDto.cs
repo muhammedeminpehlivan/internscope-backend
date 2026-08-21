@@ -20,5 +20,13 @@
         public int TotalCompanies { get; set; }
         public int TotalUniversities { get; set; }
         public double OverallAverageScore { get; set; }
+        public double ReturnOfferRate { get; set; }
+    }
+
+    public class ApplicationMethodStatOutputModel
+    {
+        public string Method { get; set; }
+        public int Count { get; set; }
+        public double Percentage { get; set; }
     }
 }

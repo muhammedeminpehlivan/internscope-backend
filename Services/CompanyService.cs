@@ -143,6 +143,10 @@ namespace InternScope.Services
                 Salary = scores.Any() ? scores.Average(s => s.SalaryScore) : 0
             };
 
+            var returnOfferCount = await approvedQuery
+                .Where(i => i.ReturnOfferReceived)
+                .CountAsync();
+
             return new CompanyDetailOutputModel
             {
                 Id = company.Id,
@@ -150,6 +154,10 @@ namespace InternScope.Services
                 Slug = company.Slug,
                 ReviewCount = reviews.Count,
                 CategoryAverages = averages,
+                ReturnOfferCount = returnOfferCount,
+                ReturnOfferRate = reviews.Count > 0
+                    ? Math.Round((double)returnOfferCount / reviews.Count * 100, 1)
+                    : 0,
                 AverageScore = scores.Any()
                     ? (averages.Learning + averages.Mentoring + averages.TechInfra
                        + averages.WorkEnvironment + averages.Salary) / 5.0

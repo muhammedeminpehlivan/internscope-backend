@@ -13,10 +13,16 @@ namespace InternScope.Entities
 
     public enum ApplicationMethod
     {
+        KariyerKapisi,    // Kariyer Kapısı (Ulusal Staj Programı)
+        Iskur,            // İŞKUR
         LinkedIn,
-        CareerSite,
-        Reference,
-        InternshipFair,
-        Other
+        KariyerNet,       // Kariyer.net
+        Youthall,
+        ToptalentCo,      // toptalent.co
+        IndeedTurkiye,    // Indeed Türkiye
+        CompanyWebsite,   // Şirketin kendi web sitesi
+        Reference,        // Referans / tanıdık
+        InternshipFair,   // Staj fuarı
+        Other             // Diğer
     }
 }
