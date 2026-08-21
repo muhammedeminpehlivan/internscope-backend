@@ -45,7 +45,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id)    
     {
         var ok = await _adminService.DeleteAsync(id);
         if (!ok) return NotFound(new { message = "Staj bulunamadı." });

@@ -2,6 +2,7 @@ using InternScope.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
@@ -74,7 +75,11 @@ builder.Services.AddScoped<AdminService>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+        // Npgsql'in non-deterministic collation annotation formatı, snapshot ile runtime model
+        // karşılaştırmasında false-positive üretiyor. `dotnet ef migrations add` boş migration
+        // üretiyorsa (yani gerçek diff yok) bu uyarı yanıltıcı — devre dışı bırakıyoruz.
+        .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddCors(options =>
 {
