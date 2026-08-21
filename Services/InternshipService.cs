@@ -36,7 +36,6 @@ namespace InternScope.Services
 
             // 2. Firmayı bul veya oluştur
             var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
-            var department = await _departmentService.GetOrCreateByNameAsync(input.DepartmentName);
 
             // 3. Staj kaydını oluştur
             var internship = new Internship
@@ -45,7 +44,7 @@ namespace InternScope.Services
                 UserId = userId,
                 CompanyId = company.Id,
                 UniversityId = input.UniversityId,
-                DepartmentId = department.Id,
+                DepartmentId = input.DepartmentId,
                 CompanyDepartment = input.CompanyDepartment,
                 StartDate = input.StartDate,
                 EndDate = input.EndDate,
@@ -152,11 +151,10 @@ namespace InternScope.Services
         public async Task ApplyInputAsync(Internship internship, InternshipInputModel input)
         {
             var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
-            var department = await _departmentService.GetOrCreateByNameAsync(input.DepartmentName);
 
             internship.CompanyId = company.Id;
             internship.UniversityId = input.UniversityId;
-            internship.DepartmentId = department.Id;
+            internship.DepartmentId = input.DepartmentId;
             internship.CompanyDepartment = input.CompanyDepartment;
             internship.StartDate = input.StartDate;
             internship.EndDate = input.EndDate;

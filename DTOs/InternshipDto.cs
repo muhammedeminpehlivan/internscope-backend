@@ -6,12 +6,12 @@ namespace InternScope.DTOs.Internship
 {
     public class InternshipInputModel
     {
-        public string CompanyName { get; set; }        
+        public string CompanyName { get; set; }
         public Guid UniversityId { get; set; }
-        public string DepartmentName { get; set; }
-        public string CompanyDepartment { get; set; }  
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public Guid DepartmentId { get; set; }
+        public string CompanyDepartment { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
         public bool IsAnonymous { get; set; }
         public InternshipTerm Term { get; set; }
         public int? StipendMin { get; set; }
@@ -21,6 +21,7 @@ namespace InternScope.DTOs.Internship
 
         public ScoreInputModel Scores { get; set; }
         public InterviewInputModel Interview { get; set; }
+        public Guid CityId { get; set; }
     }
 
     public class ScoreInputModel
@@ -50,8 +51,8 @@ namespace InternScope.DTOs.Internship
         public string UniversityName { get; set; }
         public string DepartmentName { get; set; }
         public string CompanyDepartment { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
         public bool IsAnonymous { get; set; }
         public bool IsSgkVerified { get; set; }
         public string Status { get; set; }
@@ -60,12 +61,14 @@ namespace InternScope.DTOs.Internship
         public int? StipendMax { get; set; }
         public string Currency { get; set; }
         public bool ReturnOfferReceived { get; set; }
+        public string CityName { get; set; }
 
         // Anonim ise "Anonim Kullanıcı", değilse gerçek ad
         public string AuthorName { get; set; }
 
         public ScoreOutputModel Scores { get; set; }
         public InterviewOutputModel Interview { get; set; }
+
     }
 
     public class ScoreOutputModel
