@@ -55,6 +55,11 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+// JWT anahtarı runtime'da null olursa startup'ta net hata verelim.
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt:Key konfigürasyonu boş. appsettings veya user-secrets üzerinden set edin.");
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
@@ -106,7 +111,7 @@ options.Cookie.HttpOnly = true;
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        Encoding.UTF8.GetBytes(jwtKey)),
         RoleClaimType = "role"
     };
 })
@@ -147,6 +152,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // Boş DB'ye deploy'da tabloları oluştur, sonra seed'i çalıştır.
+    context.Database.Migrate();
     DbInitializer.SeedUniversities(context);
 }
 

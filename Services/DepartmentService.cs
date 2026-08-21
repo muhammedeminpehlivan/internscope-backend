@@ -24,11 +24,12 @@ namespace InternScope.Services
                 .ProjectTo<DepartmentOutputModel>(_mapper.ConfigurationProvider)
                 .ToListAsync();
         }
+        // Name kolonunda ci_collation var — == case-insensitive.
         public async Task<Department> GetOrCreateByNameAsync(string name)
         {
             var normalized = name.Trim();
             var existing = await _context.Departments
-                .FirstOrDefaultAsync(d => d.Name.ToLower() == normalized.ToLower());
+                .FirstOrDefaultAsync(d => d.Name == normalized);
             if (existing != null) return existing;
 
             var department = new Department
@@ -38,8 +39,18 @@ namespace InternScope.Services
                 CreatedAt = DateTime.UtcNow
             };
             _context.Departments.Add(department);
-            await _context.SaveChangesAsync();
-            return department;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return department;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(department).State = EntityState.Detached;
+                return await _context.Departments
+                    .FirstAsync(d => d.Name == normalized);
+            }
         }
 
 

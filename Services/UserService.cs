@@ -1,37 +1,68 @@
 ﻿using InternScope.Entities;
+using Microsoft.EntityFrameworkCore;
 
 public class UserService
 {
     private readonly AppDbContext _context;
     private readonly EmailService _emailService;
+    private readonly IConfiguration _configuration;
 
-    public UserService(AppDbContext context, EmailService emailService)
+    public UserService(AppDbContext context, EmailService emailService, IConfiguration configuration)
     {
         _context = context;
         _emailService = emailService;
+        _configuration = configuration;
+    }
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
 
     public async Task SendVerificationEmailAsync(Guid userId, string studentEmail)
     {
-        Console.WriteLine($"[UserService] userId: {userId}");
-        Console.WriteLine($"[UserService] studentEmail: {studentEmail}");
+        studentEmail = studentEmail.Trim().ToLower();
 
+        // 1. Format kontrolü (gerçek mail formatı mı?)
+        if (!IsValidEmail(studentEmail))
+            throw new Exception("Geçerli bir e-posta adresi girin.");
+
+        // 2. .edu.tr kontrolü (öğrenci maili mi?)
         if (!studentEmail.EndsWith(".edu.tr"))
-            throw new Exception("Lütfen geçerli bir öğrenci maili girin.");
+            throw new Exception("Lütfen geçerli bir öğrenci maili (.edu.tr) girin.");
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return;
+        if (user == null) throw new Exception("Kullanıcı bulunamadı.");
+
+        // 3. Zaten doğrulanmış mı?
+        if (user.IsEmailVerified)
+            throw new Exception("Mailiniz zaten doğrulanmış.");
+
+        // 4. Bu öğrenci maili başka biri tarafından kullanılıyor mu?
+        // .NET 10'da System.Linq.AsyncEnumerable.AnyAsync ile çakışmayı engellemek için Where→AnyAsync
+        var emailTaken = await _context.Users
+            .Where(u => u.Id != userId && u.StudentEmail == studentEmail && u.IsEmailVerified)
+            .AnyAsync();
+        if (emailTaken)
+            throw new Exception("Bu öğrenci maili başka bir hesapta kullanılıyor.");
 
         var token = Guid.NewGuid().ToString();
-
         user.StudentEmail = studentEmail;
         user.EmailVerificationToken = token;
         user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
-
         await _context.SaveChangesAsync();
 
-        var verificationLink = $"https://localhost:7134/user/verify-email?token={token}";
+        var backendUrl = _configuration["Backend:BaseUrl"]?.TrimEnd('/')
+            ?? throw new InvalidOperationException("Backend:BaseUrl konfigürasyonu eksik.");
+        var verificationLink = $"{backendUrl}/user/verify-email?token={token}";
 
         var body = $@"
             <h2>InternScope - Mail Doğrulama</h2>

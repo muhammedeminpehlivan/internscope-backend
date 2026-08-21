@@ -53,6 +53,8 @@ public class AuthController : ControllerBase
 
         var result = await _authService.HandleLinkedInLoginAsync(input);
         var frontendUrl = _configuration["Frontend:BaseUrl"];
-        return Redirect($"{frontendUrl}/auth/callback?token={result.Token}");
+        // Token'ı fragment (#) olarak veriyoruz: browser history/referer/proxy log'larına gitmez.
+        // Frontend `location.hash`'ten okuyup localStorage/state'e almalı.
+        return Redirect($"{frontendUrl}/auth/callback#token={result.Token}");
     }
 }

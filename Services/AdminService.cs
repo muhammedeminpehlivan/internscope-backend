@@ -45,5 +45,41 @@ namespace InternScope.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<AdminInternshipOutputModel>> GetAllAsync(string? status)
+        {
+            var query = _context.Internships.AsQueryable();
+
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<InternshipStatus>(status, true, out var parsed))
+                query = query.Where(i => i.Status == parsed);
+
+            return await query
+                .OrderByDescending(i => i.CreatedAt)
+                .ProjectTo<AdminInternshipOutputModel>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var internship = await _context.Internships
+                .Include(i => i.Score)
+                .Include(i => i.InterviewProcess)
+                .Include(i => i.Answers)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (internship == null) return false;
+
+            // Bağlı kayıtları da sil (yoksa FK hatası verir)
+            if (internship.Score != null)
+                _context.InternshipScores.Remove(internship.Score);
+            if (internship.InterviewProcess != null)
+                _context.InterviewProcesses.Remove(internship.InterviewProcess);
+            if (internship.Answers != null && internship.Answers.Any())
+                _context.InternshipAnswers.RemoveRange(internship.Answers);
+
+            _context.Internships.Remove(internship);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
