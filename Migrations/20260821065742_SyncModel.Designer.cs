@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InternScope.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260821065742_SyncModel")]
+    partial class SyncModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +54,7 @@ namespace InternScope.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Department", b =>
@@ -76,7 +79,7 @@ namespace InternScope.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Departments", (string)null);
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Internship", b =>
@@ -137,7 +140,7 @@ namespace InternScope.Migrations
 
                     b.HasIndex("Status", "CreatedAt");
 
-                    b.ToTable("Internships", (string)null);
+                    b.ToTable("Internships");
                 });
 
             modelBuilder.Entity("InternScope.Entities.InternshipAnswer", b =>
@@ -168,7 +171,7 @@ namespace InternScope.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("InternshipAnswers", (string)null);
+                    b.ToTable("InternshipAnswers");
                 });
 
             modelBuilder.Entity("InternScope.Entities.InternshipScore", b =>
@@ -212,7 +215,7 @@ namespace InternScope.Migrations
                     b.HasIndex("InternshipId")
                         .IsUnique();
 
-                    b.ToTable("InternshipScores", (string)null);
+                    b.ToTable("InternshipScores");
                 });
 
             modelBuilder.Entity("InternScope.Entities.InterviewProcess", b =>
@@ -250,7 +253,7 @@ namespace InternScope.Migrations
                     b.HasIndex("InternshipId")
                         .IsUnique();
 
-                    b.ToTable("InterviewProcesses", (string)null);
+                    b.ToTable("InterviewProcesses");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Question", b =>
@@ -277,7 +280,7 @@ namespace InternScope.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Questions", (string)null);
+                    b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("InternScope.Entities.University", b =>
@@ -301,7 +304,7 @@ namespace InternScope.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Universities", (string)null);
+                    b.ToTable("Universities");
                 });
 
             modelBuilder.Entity("InternScope.Entities.User", b =>
@@ -352,7 +355,7 @@ namespace InternScope.Migrations
                     b.HasIndex("LinkedInId")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Internship", b =>
