@@ -36,4 +36,19 @@ public class AdminController : ControllerBase
         if (!ok) return NotFound(new { message = "Staj bulunamadı." });
         return Ok(new { message = "Staj reddedildi." });
     }
+
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAll([FromQuery] string? status)
+    {
+        var list = await _adminService.GetAllAsync(status);
+        return Ok(list);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var ok = await _adminService.DeleteAsync(id);
+        if (!ok) return NotFound(new { message = "Staj bulunamadı." });
+        return Ok(new { message = "Staj kalıcı olarak silindi." });
+    }
 }

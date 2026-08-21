@@ -22,18 +22,17 @@ namespace InternScope.Services
         }
 
         // Firma adını alır. Varsa mevcut firmayı döner, yoksa oluşturup döner.
+        // Name kolonunda ci_collation var — == karşılaştırması case-insensitive.
         public async Task<Company> GetOrCreateCompanyAsync(string companyName)
         {
             var normalizedName = companyName.Trim();
 
-            // Aynı isimde firma var mı? (büyük/küçük harf duyarsız)
             var existing = await _context.Companies
-                .FirstOrDefaultAsync(c => c.Name.ToLower() == normalizedName.ToLower());
+                .FirstOrDefaultAsync(c => c.Name == normalizedName);
 
             if (existing != null)
                 return existing;
 
-            // Yoksa yeni firma oluştur
             var company = new Company
             {
                 Id = Guid.NewGuid(),
@@ -43,9 +42,19 @@ namespace InternScope.Services
             };
 
             _context.Companies.Add(company);
-            await _context.SaveChangesAsync();
 
-            return company;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return company;
+            }
+            catch (DbUpdateException)
+            {
+                // Race: başka istek aynı anda yazdı → unique index tetiklendi. Yeniden oku.
+                _context.Entry(company).State = EntityState.Detached;
+                return await _context.Companies
+                    .FirstAsync(c => c.Name == normalizedName);
+            }
         }
 
         // "Arçelik A.Ş." -> "arcelik-as"
