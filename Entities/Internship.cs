@@ -22,6 +22,7 @@
         public InternshipScore Score { get; set; }
         public InterviewProcess InterviewProcess { get; set; }
         public ICollection<InternshipAnswer> Answers { get; set; }
+        public string? SgkVerificationCode { get; set; }
     }
 
     public enum InternshipStatus

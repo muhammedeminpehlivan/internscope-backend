@@ -16,5 +16,7 @@ namespace InternScope.DTOs
         public DateTime CreatedAt { get; set; }
         public ScoreOutputModel Scores { get; set; }
         public InterviewOutputModel Interview { get; set; }
+        public string SgkDocumentUrl { get; set; }
+        public string SgkVerificationCode { get; set; }
     }
 }

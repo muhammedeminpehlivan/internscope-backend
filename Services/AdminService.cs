@@ -26,11 +26,20 @@ namespace InternScope.Services
                 .ToListAsync();
         }
 
-        public async Task<bool> ApproveAsync(Guid id)
+        public async Task<bool> ApproveAsync(Guid id, bool verifySgk)
         {
             var internship = await _context.Internships.FindAsync(id);
             if (internship == null) return false;
+
             internship.Status = InternshipStatus.Approved;
+
+            if (verifySgk)
+            {
+                if (string.IsNullOrEmpty(internship.SgkDocumentUrl))
+                    throw new Exception("SGK belgesi yüklenmemiş, belgeli onay yapılamaz.");
+                internship.IsSgkVerified = true;
+            }
+
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;

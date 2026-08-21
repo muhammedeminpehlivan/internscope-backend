@@ -72,7 +72,7 @@ builder.Services.AddScoped<UniversityService>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<AdminService>();
-
+builder.Services.AddScoped<CloudinaryService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
