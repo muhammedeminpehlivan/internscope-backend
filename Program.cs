@@ -73,6 +73,7 @@ builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<CloudinaryService>();
+builder.Services.AddScoped<CityService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -160,6 +161,8 @@ using (var scope = app.Services.CreateScope())
     // Boş DB'ye deploy'da tabloları oluştur, sonra seed'i çalıştır.
     context.Database.Migrate();
     DbInitializer.SeedUniversities(context);
+    DbInitializer.SeedCities(context);
+    DbInitializer.SeedDepartments(context);
 }
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions

@@ -14,7 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<InterviewProcess> InterviewProcesses { get; set; }
     public DbSet<Question> Questions { get; set; }
     public DbSet<InternshipAnswer> InternshipAnswers { get; set; }
-
+    public DbSet<City> Cities { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
