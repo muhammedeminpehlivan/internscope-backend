@@ -31,6 +31,8 @@ namespace InternScope.DTOs
         public double AverageScore { get; set; }
         public int ReviewCount { get; set; }
         public CategoryAverages CategoryAverages { get; set; }
+        public double ReturnOfferRate { get; set; }   // yüzde (onaylı stajlar içinde)
+        public int ReturnOfferCount { get; set; }      // teklif alan kişi sayısı
         public List<InternshipOutputModel> Reviews { get; set; }
     }
 }

@@ -32,4 +32,11 @@ public class StatisticsController : ControllerBase
         var stats = await _statisticsService.GetOverallAsync();
         return Ok(stats);
     }
+
+    [HttpGet("application-methods")]
+    public async Task<IActionResult> GetApplicationMethodStats()
+    {
+        var stats = await _statisticsService.GetApplicationMethodStatsAsync();
+        return Ok(stats);
+    }
 }
