@@ -45,6 +45,7 @@ namespace InternScope.Services
                 CompanyId = company.Id,
                 UniversityId = input.UniversityId,
                 DepartmentId = input.DepartmentId,
+                CityId = input.CityId,
                 CompanyDepartment = input.CompanyDepartment,
                 StartDate = input.StartDate,
                 EndDate = input.EndDate,
@@ -155,6 +156,7 @@ namespace InternScope.Services
             internship.CompanyId = company.Id;
             internship.UniversityId = input.UniversityId;
             internship.DepartmentId = input.DepartmentId;
+            internship.CityId = input.CityId;
             internship.CompanyDepartment = input.CompanyDepartment;
             internship.StartDate = input.StartDate;
             internship.EndDate = input.EndDate;
