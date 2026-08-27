@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using InternScope.DTOs.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 [Authorize]
 [ApiController]
@@ -53,7 +54,7 @@ public class UserController : ControllerBase
 
         if (user == null) return NotFound();
 
-        return Ok(new   
+        return Ok(new
         {
             id = user.Id,
             fullName = user.FullName,
@@ -61,7 +62,39 @@ public class UserController : ControllerBase
             studentEmail = user.StudentEmail,
             isEmailVerified = user.IsEmailVerified,
             profilePictureUrl = user.ProfilePictureUrl,
-            role = user.Role.ToString()
+            role = user.Role.ToString(),
+            universityId = user.UniversityId,
+            universityName = user.University?.Name,
+            departmentId = user.DepartmentId,
+            departmentName = user.Department?.Name
         });
+    }
+
+    // Öğrenci okul/bölüm bilgisini kendisi girer/günceller.
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileInputModel input)
+    {
+        var userIdClaim = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null) return Unauthorized();
+
+        try
+        {
+            var userId = Guid.Parse(userIdClaim);
+            var user = await _userService.UpdateProfileAsync(userId, input.UniversityId, input.DepartmentId);
+
+            return Ok(new
+            {
+                universityId = user.UniversityId,
+                universityName = user.University?.Name,
+                departmentId = user.DepartmentId,
+                departmentName = user.Department?.Name
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

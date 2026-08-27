@@ -72,7 +72,14 @@ namespace InternScope.Services
             interview.InternshipId = internship.Id;
             interview.CreatedAt = DateTime.UtcNow;
 
-            // 6. Hepsini kaydet
+            // 6a. Profilde okul/bölüm boşsa staj kaydından otomatik doldur.
+            //     (Kullanıcı daha önce profilinden manuel girmişse dokunma.)
+            if (user.UniversityId == null)
+                user.UniversityId = input.UniversityId;
+            if (user.DepartmentId == null)
+                user.DepartmentId = input.DepartmentId;
+
+            // 6b. Hepsini kaydet
             _context.Internships.Add(internship);
             _context.InternshipScores.Add(score);
             _context.InterviewProcesses.Add(interview);

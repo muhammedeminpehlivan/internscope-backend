@@ -12,6 +12,14 @@
         public DateTime? EmailVerificationTokenExpiry { get; set; }
         public string? StudentEmail { get; set; }
 
+        // Öğrencinin okulu ve bölümü (profil). Manuel girilebilir ya da
+        // ilk staj kaydından otomatik doldurulabilir.
+        public Guid? UniversityId { get; set; }
+        public Guid? DepartmentId { get; set; }
+
+
+        public University? University { get; set; }
+        public Department? Department { get; set; }
 
         public ICollection<Internship> Internships { get; set; }
     }
