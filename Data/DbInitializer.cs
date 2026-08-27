@@ -106,7 +106,7 @@ public static class DbInitializer
         if (context.Departments.Any()) return;
 
         var names = new[]
-        
+            
            
 {
     // ---- BİLGİSAYAR / YAZILIM / BİLİŞİM ----
@@ -201,9 +201,9 @@ public static class DbInitializer
     // ---- DİĞER ----
     "Diğer"
 };
-    
 
-        var departments = names.Select(n => new Department
+
+        var departments = names.Distinct().Select(n => new Department
         {
             Id = Guid.NewGuid(),
             Name = n,
