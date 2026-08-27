@@ -93,7 +93,36 @@ public class UserService
     }
     public async Task<User?> GetByIdAsync(Guid userId)
     {
-        return await _context.Users.FindAsync(userId);
+        return await _context.Users
+            .Include(u => u.University)
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
+
+    // Öğrenci profilinden okul/bölüm bilgisini manuel günceller.
+    public async Task<User> UpdateProfileAsync(Guid userId, Guid? universityId, Guid? departmentId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) throw new Exception("Kullanıcı bulunamadı.");
+
+        if (universityId.HasValue)
+        {
+            var exists = await _context.Universities.AnyAsync(u => u.Id == universityId.Value);
+            if (!exists) throw new Exception("Seçilen üniversite bulunamadı.");
+        }
+
+        if (departmentId.HasValue)
+        {
+            var exists = await _context.Departments.AnyAsync(d => d.Id == departmentId.Value);
+            if (!exists) throw new Exception("Seçilen bölüm bulunamadı.");
+        }
+
+        user.UniversityId = universityId;
+        user.DepartmentId = departmentId;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return (await GetByIdAsync(userId))!;
     }
 
 }

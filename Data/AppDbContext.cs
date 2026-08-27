@@ -44,6 +44,16 @@ public class AppDbContext : DbContext
         {
             b.HasIndex(u => u.LinkedInId).IsUnique();
             b.Property(u => u.StudentEmail).UseCollation("ci_collation");
+
+            b.HasOne(u => u.University)
+                .WithMany()
+                .HasForeignKey(u => u.UniversityId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            b.HasOne(u => u.Department)
+                .WithMany()
+                .HasForeignKey(u => u.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Sık kullanılan sorgu: Status = Approved order by CreatedAt desc
