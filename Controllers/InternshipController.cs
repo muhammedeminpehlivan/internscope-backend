@@ -1,4 +1,5 @@
-﻿using InternScope.DTOs.Internship;
+using InternScope.Common;
+using InternScope.DTOs.Internship;
 using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,54 +16,24 @@ public class InternshipController : ControllerBase
         _internshipService = internshipService;
     }
 
+    private Guid GetUserId() => Guid.Parse(
+        HttpContext.User.Claims.First(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] InternshipInputModel input)
     {
-        var userIdClaim = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var result = await _internshipService.CreateInternshipAsync(GetUserId(), input);
+        if (result.IsFailure) return result.Error!.ToActionResult();
 
-        if (userIdClaim == null) return Unauthorized();
-
-        try
-        {
-            var userId = Guid.Parse(userIdClaim);
-            var internshipId = await _internshipService.CreateInternshipAsync(userId, input);
-
-            return Ok(new
-            {
-                id = internshipId,
-                message = "Staj değerlendirmeniz alındı. Admin onayından sonra yayınlanacaktır."
-            });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-
-
+        return Ok(new { id = result.Value, message = "Staj değerlendirmeniz alındı. Admin onayından sonra yayınlanacaktır." });
     }
-
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] InternshipInputModel input)
     {
-        var userIdClaim = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Unauthorized();
-
-        try
-        {
-            var userId = Guid.Parse(userIdClaim);
-            await _internshipService.UpdateAsync(userId, id, input);
-            return Ok(new { message = "Düzenlemeniz alındı. Admin onayına kadar eski haliniz yayında kalacak." });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _internshipService.UpdateAsync(GetUserId(), id, input);
+        return result.ToActionResult("Düzenlemeniz alındı. Admin onayına kadar eski haliniz yayında kalacak.");
     }
-
-
 
     [HttpGet]
     [AllowAnonymous]
@@ -75,34 +46,14 @@ public class InternshipController : ControllerBase
     [HttpGet("mine")]
     public async Task<IActionResult> GetMine()
     {
-        var userIdClaim = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (userIdClaim == null) return Unauthorized();
-
-        var userId = Guid.Parse(userIdClaim);
-        var list = await _internshipService.GetMyInternshipsAsync(userId);
+        var list = await _internshipService.GetMyInternshipsAsync(GetUserId());
         return Ok(list);
     }
-
-
 
     [HttpPost("{id}/sgk")]
     public async Task<IActionResult> UploadSgk(Guid id, IFormFile file, [FromForm] string verificationCode)
     {
-        var userIdClaim = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Unauthorized();
-
-        try
-        {
-            var userId = Guid.Parse(userIdClaim);
-            await _internshipService.UploadSgkAsync(userId, id, file, verificationCode);
-            return Ok(new { message = "SGK belgesi ve doğrulama kodu yüklendi. Admin onayı bekleniyor." });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _internshipService.UploadSgkAsync(GetUserId(), id, file, verificationCode);
+        return result.ToActionResult("SGK belgesi ve doğrulama kodu yüklendi. Admin onayı bekleniyor.");
     }
 }

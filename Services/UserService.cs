@@ -1,4 +1,5 @@
-﻿using InternScope.Entities;
+using InternScope.Common;
+using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
 
 public class UserService
@@ -6,13 +7,16 @@ public class UserService
     private readonly AppDbContext _context;
     private readonly EmailService _emailService;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(AppDbContext context, EmailService emailService, IConfiguration configuration)
+    public UserService(AppDbContext context, EmailService emailService, IConfiguration configuration, ILogger<UserService> logger)
     {
         _context = context;
         _emailService = emailService;
         _configuration = configuration;
+        _logger = logger;
     }
+
     private bool IsValidEmail(string email)
     {
         try
@@ -20,39 +24,30 @@ public class UserService
             var addr = new System.Net.Mail.MailAddress(email);
             return addr.Address == email;
         }
-        catch
-        {
-            return false;
-        }
+        catch { return false; }
     }
 
-
-    public async Task SendVerificationEmailAsync(Guid userId, string studentEmail)
+    public async Task<Result> SendVerificationEmailAsync(Guid userId, string studentEmail)
     {
         studentEmail = studentEmail.Trim().ToLower();
 
-        // 1. Format kontrolü (gerçek mail formatı mı?)
         if (!IsValidEmail(studentEmail))
-            throw new Exception("Geçerli bir e-posta adresi girin.");
+            return Error.Validation("Geçerli bir e-posta adresi girin.");
 
-        // 2. .edu.tr kontrolü (öğrenci maili mi?)
         if (!studentEmail.EndsWith(".edu.tr"))
-            throw new Exception("Lütfen geçerli bir öğrenci maili (.edu.tr) girin.");
+            return Error.Validation("Lütfen geçerli bir öğrenci maili (.edu.tr) girin.");
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) throw new Exception("Kullanıcı bulunamadı.");
+        if (user == null) return Error.NotFound("Kullanıcı bulunamadı.");
 
-        // 3. Zaten doğrulanmış mı?
         if (user.IsEmailVerified)
-            throw new Exception("Mailiniz zaten doğrulanmış.");
+            return Error.Conflict("Mailiniz zaten doğrulanmış.");
 
-        // 4. Bu öğrenci maili başka biri tarafından kullanılıyor mu?
-        // .NET 10'da System.Linq.AsyncEnumerable.AnyAsync ile çakışmayı engellemek için Where→AnyAsync
         var emailTaken = await _context.Users
             .Where(u => u.Id != userId && u.StudentEmail == studentEmail && u.IsEmailVerified)
             .AnyAsync();
         if (emailTaken)
-            throw new Exception("Bu öğrenci maili başka bir hesapta kullanılıyor.");
+            return Error.Conflict("Bu öğrenci maili başka bir hesapta kullanılıyor.");
 
         var token = Guid.NewGuid().ToString();
         user.StudentEmail = studentEmail;
@@ -74,23 +69,27 @@ public class UserService
             <p>Bu link 24 saat geçerlidir.</p>
         ";
 
+        _logger.LogInformation("Doğrulama maili gönderiliyor: {Email}", studentEmail);
         await _emailService.SendEmailAsync(studentEmail, "InternScope - Mail Doğrulama", body);
+        return Result.Success();
     }
 
-    public async Task<bool> VerifyEmailAsync(string token)
+    public async Task<Result> VerifyEmailAsync(string token)
     {
         var user = _context.Users.FirstOrDefault(u => u.EmailVerificationToken == token);
 
-        if (user == null) return false;
-        if (user.EmailVerificationTokenExpiry < DateTime.UtcNow) return false;
+        if (user == null || user.EmailVerificationTokenExpiry < DateTime.UtcNow)
+            return Error.Validation("Geçersiz veya süresi dolmuş token.");
 
         user.IsEmailVerified = true;
         user.EmailVerificationToken = null;
         user.EmailVerificationTokenExpiry = null;
 
         await _context.SaveChangesAsync();
-        return true;
+        _logger.LogInformation("Mail doğrulandı: UserId={UserId}", user.Id);
+        return Result.Success();
     }
+
     public async Task<User?> GetByIdAsync(Guid userId)
     {
         return await _context.Users
@@ -99,30 +98,29 @@ public class UserService
             .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
-    // Öğrenci profilinden okul/bölüm bilgisini manuel günceller.
-    public async Task<User> UpdateProfileAsync(Guid userId, Guid? universityId, Guid? departmentId)
+    public async Task<Result<User>> UpdateProfileAsync(Guid userId, Guid? universityId, Guid? departmentId, string? linkedInProfileUrl)
     {
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) throw new Exception("Kullanıcı bulunamadı.");
+        if (user == null) return Error.NotFound("Kullanıcı bulunamadı.");
 
         if (universityId.HasValue)
         {
             var exists = await _context.Universities.AnyAsync(u => u.Id == universityId.Value);
-            if (!exists) throw new Exception("Seçilen üniversite bulunamadı.");
+            if (!exists) return Error.NotFound("Seçilen üniversite bulunamadı.");
         }
 
         if (departmentId.HasValue)
         {
             var exists = await _context.Departments.AnyAsync(d => d.Id == departmentId.Value);
-            if (!exists) throw new Exception("Seçilen bölüm bulunamadı.");
+            if (!exists) return Error.NotFound("Seçilen bölüm bulunamadı.");
         }
 
         user.UniversityId = universityId;
         user.DepartmentId = departmentId;
+        user.LinkedInProfileUrl = linkedInProfileUrl?.Trim();
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return (await GetByIdAsync(userId))!;
     }
-
 }

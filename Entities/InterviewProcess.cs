@@ -7,8 +7,7 @@ namespace InternScope.Entities
         public int StageCount { get; set; }
         public string? Description { get; set; }
 
-        // Navigation Property
-        public Internship Internship { get; set; }
+        public Internship Internship { get; set; } = null!;
     }
 
     public enum ApplicationMethod

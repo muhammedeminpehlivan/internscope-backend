@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InternScope.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260831110821_AddLinkedInProfileUrl")]
+    partial class AddLinkedInProfileUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,40 +44,6 @@ namespace InternScope.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Cities");
-                });
-
-            modelBuilder.Entity("InternScope.Entities.CommentReport", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CommentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsReviewed")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("ReportedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ReportedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReportedById");
-
-                    b.HasIndex("CommentId", "ReportedByUserId")
-                        .IsUnique();
-
-                    b.ToTable("CommentReports");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Company", b =>
@@ -254,71 +223,6 @@ namespace InternScope.Migrations
                     b.HasIndex("QuestionId");
 
                     b.ToTable("InternshipAnswers");
-                });
-
-            modelBuilder.Entity("InternScope.Entities.InternshipComment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("InternshipId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InternshipId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("InternshipComments");
-                });
-
-            modelBuilder.Entity("InternScope.Entities.InternshipReaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("InternshipId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsPositive")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("InternshipId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("InternshipReactions");
                 });
 
             modelBuilder.Entity("InternScope.Entities.InternshipScore", b =>
@@ -512,25 +416,6 @@ namespace InternScope.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("InternScope.Entities.CommentReport", b =>
-                {
-                    b.HasOne("InternScope.Entities.InternshipComment", "Comment")
-                        .WithMany("Reports")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("InternScope.Entities.User", "ReportedBy")
-                        .WithMany()
-                        .HasForeignKey("ReportedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("ReportedBy");
-                });
-
             modelBuilder.Entity("InternScope.Entities.Internship", b =>
                 {
                     b.HasOne("InternScope.Entities.City", "City")
@@ -593,44 +478,6 @@ namespace InternScope.Migrations
                     b.Navigation("Question");
                 });
 
-            modelBuilder.Entity("InternScope.Entities.InternshipComment", b =>
-                {
-                    b.HasOne("InternScope.Entities.Internship", "Internship")
-                        .WithMany()
-                        .HasForeignKey("InternshipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("InternScope.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Internship");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("InternScope.Entities.InternshipReaction", b =>
-                {
-                    b.HasOne("InternScope.Entities.Internship", "Internship")
-                        .WithMany()
-                        .HasForeignKey("InternshipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("InternScope.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Internship");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("InternScope.Entities.InternshipScore", b =>
                 {
                     b.HasOne("InternScope.Entities.Internship", "Internship")
@@ -689,11 +536,6 @@ namespace InternScope.Migrations
 
                     b.Navigation("Score")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("InternScope.Entities.InternshipComment", b =>
-                {
-                    b.Navigation("Reports");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Question", b =>

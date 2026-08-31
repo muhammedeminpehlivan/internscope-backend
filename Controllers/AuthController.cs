@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using InternScope.DTOs.Auth;
+using InternScope.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 

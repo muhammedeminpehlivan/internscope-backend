@@ -1,10 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using InternScope.Common;
 using InternScope.DTOs;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace InternScope.Services
 {
@@ -13,12 +14,14 @@ namespace InternScope.Services
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly InternshipService _internshipService;
+        private readonly ILogger<AdminService> _logger;
 
-        public AdminService(AppDbContext context, IMapper mapper, InternshipService internshipService   )
+        public AdminService(AppDbContext context, IMapper mapper, InternshipService internshipService, ILogger<AdminService> logger)
         {
             _context = context;
             _mapper = mapper;
             _internshipService = internshipService;
+            _logger = logger;
         }
 
         public async Task<List<AdminInternshipOutputModel>> GetPendingAsync()
@@ -30,33 +33,34 @@ namespace InternScope.Services
                 .ToListAsync();
         }
 
-        public async Task<bool> ApproveAsync(Guid id, bool verifySgk)
+        public async Task<Result> ApproveAsync(Guid id, bool verifySgk)
         {
             var internship = await _context.Internships.FindAsync(id);
-            if (internship == null) return false;
+            if (internship == null) return Error.NotFound("Staj bulunamadı.");
+
+            if (verifySgk && string.IsNullOrEmpty(internship.SgkDocumentUrl))
+                return Error.Validation("SGK belgesi yüklenmemiş, belgeli onay yapılamaz.");
 
             internship.Status = InternshipStatus.Approved;
-
-            if (verifySgk)
-            {
-                if (string.IsNullOrEmpty(internship.SgkDocumentUrl))
-                    throw new Exception("SGK belgesi yüklenmemiş, belgeli onay yapılamaz.");
-                internship.IsSgkVerified = true;
-            }
-
+            if (verifySgk) internship.IsSgkVerified = true;
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return true;
+
+            _logger.LogInformation("Staj onaylandı: {InternshipId} (SGK={VerifySgk})", id, verifySgk);
+            return Result.Success();
         }
 
-        public async Task<bool> RejectAsync(Guid id)
+        public async Task<Result> RejectAsync(Guid id)
         {
             var internship = await _context.Internships.FindAsync(id);
-            if (internship == null) return false;
+            if (internship == null) return Error.NotFound("Staj bulunamadı.");
+
             internship.Status = InternshipStatus.Rejected;
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return true;
+
+            _logger.LogInformation("Staj reddedildi: {InternshipId}", id);
+            return Result.Success();
         }
 
         public async Task<List<AdminInternshipOutputModel>> GetAllAsync(string? status)
@@ -72,7 +76,7 @@ namespace InternScope.Services
                 .ToListAsync();
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<Result> DeleteAsync(Guid id)
         {
             var internship = await _context.Internships
                 .Include(i => i.Score)
@@ -80,22 +84,18 @@ namespace InternScope.Services
                 .Include(i => i.Answers)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
-            if (internship == null) return false;
+            if (internship == null) return Error.NotFound("Staj bulunamadı.");
 
-            // Bağlı kayıtları da sil (yoksa FK hatası verir)
-            if (internship.Score != null)
-                _context.InternshipScores.Remove(internship.Score);
-            if (internship.InterviewProcess != null)
-                _context.InterviewProcesses.Remove(internship.InterviewProcess);
-            if (internship.Answers != null && internship.Answers.Any())
-                _context.InternshipAnswers.RemoveRange(internship.Answers);
+            if (internship.Score != null) _context.InternshipScores.Remove(internship.Score);
+            if (internship.InterviewProcess != null) _context.InterviewProcesses.Remove(internship.InterviewProcess);
+            if (internship.Answers?.Any() == true) _context.InternshipAnswers.RemoveRange(internship.Answers);
 
             _context.Internships.Remove(internship);
             await _context.SaveChangesAsync();
-            return true;
+
+            _logger.LogWarning("Staj kalıcı silindi: {InternshipId}", id);
+            return Result.Success();
         }
-
-
 
         public async Task<List<PendingChangeReviewModel>> GetPendingChangesAsync()
         {
@@ -119,39 +119,41 @@ namespace InternScope.Services
             }).ToList();
         }
 
-
-
-        public async Task<bool> ApprovePendingChangesAsync(Guid id)
+        public async Task<Result> ApprovePendingChangesAsync(Guid id)
         {
             var internship = await _context.Internships
                 .Include(i => i.Score)
                 .Include(i => i.InterviewProcess)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
-            if (internship == null) return false;
+            if (internship == null) return Error.NotFound("Staj bulunamadı.");
             if (!internship.HasPendingChanges || internship.PendingChangesJson == null)
-                throw new Exception("Bekleyen değişiklik yok.");
+                return Error.Validation("Bekleyen değişiklik yok.");
 
             var changes = JsonSerializer.Deserialize<InternshipInputModel>(internship.PendingChangesJson);
-            await _internshipService.ApplyInputAsync(internship, changes);
+            await _internshipService.ApplyInputAsync(internship, changes!);
 
             internship.HasPendingChanges = false;
             internship.PendingChangesJson = null;
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return true;
+
+            _logger.LogInformation("Bekleyen değişiklik onaylandı: {InternshipId}", id);
+            return Result.Success();
         }
 
-        public async Task<bool> RejectPendingChangesAsync(Guid id)
+        public async Task<Result> RejectPendingChangesAsync(Guid id)
         {
             var internship = await _context.Internships.FindAsync(id);
-            if (internship == null) return false;
+            if (internship == null) return Error.NotFound("Staj bulunamadı.");
 
             internship.HasPendingChanges = false;
-            internship.PendingChangesJson = null;   // değişikliği at, eski hali kalır
+            internship.PendingChangesJson = null;
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return true;
+
+            _logger.LogInformation("Bekleyen değişiklik reddedildi: {InternshipId}", id);
+            return Result.Success();
         }
     }
 }

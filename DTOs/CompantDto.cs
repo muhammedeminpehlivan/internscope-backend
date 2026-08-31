@@ -1,4 +1,4 @@
-﻿using InternScope.DTOs.Internship;
+using InternScope.DTOs.Internship;
 
 namespace InternScope.DTOs
 {
@@ -6,8 +6,8 @@ namespace InternScope.DTOs
     public class CompanyListOutputModel
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Slug { get; set; }
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public double AverageScore { get; set; }
         public int ReviewCount { get; set; }
     }
@@ -26,13 +26,13 @@ namespace InternScope.DTOs
     public class CompanyDetailOutputModel
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Slug { get; set; }
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public double AverageScore { get; set; }
         public int ReviewCount { get; set; }
-        public CategoryAverages CategoryAverages { get; set; }
-        public double ReturnOfferRate { get; set; }   // yüzde (onaylı stajlar içinde)
-        public int ReturnOfferCount { get; set; }      // teklif alan kişi sayısı
-        public List<InternshipOutputModel> Reviews { get; set; }
+        public CategoryAverages CategoryAverages { get; set; } = null!;
+        public double ReturnOfferRate { get; set; }
+        public int ReturnOfferCount { get; set; }
+        public List<InternshipOutputModel> Reviews { get; set; } = null!;
     }
 }

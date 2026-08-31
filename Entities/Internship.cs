@@ -1,4 +1,4 @@
-﻿namespace InternScope.Entities
+namespace InternScope.Entities
 {
     public class Internship : BaseEntity
     {
@@ -6,7 +6,7 @@
         public Guid CompanyId { get; set; }
         public Guid UniversityId { get; set; }
         public Guid DepartmentId { get; set; }
-        public string CompanyDepartment { get; set; }
+        public string CompanyDepartment { get; set; } = null!;
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public bool IsAnonymous { get; set; }
@@ -22,18 +22,16 @@
         public bool ReturnOfferReceived { get; set; }
         public string? SgkVerificationCode { get; set; }
         public Guid CityId { get; set; }
-        
 
         // Navigation Properties
-        public User User { get; set; }
-        public Company Company { get; set; }
-        public University University { get; set; }
-        public Department Department { get; set; }
-        public InternshipScore Score { get; set; }
-        public InterviewProcess InterviewProcess { get; set; }
-        public ICollection<InternshipAnswer> Answers { get; set; }
-        public City City { get; set; }
-       
+        public User User { get; set; } = null!;
+        public Company Company { get; set; } = null!;
+        public University University { get; set; } = null!;
+        public Department Department { get; set; } = null!;
+        public InternshipScore Score { get; set; } = null!;
+        public InterviewProcess InterviewProcess { get; set; } = null!;
+        public ICollection<InternshipAnswer> Answers { get; set; } = null!;
+        public City City { get; set; } = null!;
     }
 
     public enum InternshipStatus

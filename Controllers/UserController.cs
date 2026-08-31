@@ -1,6 +1,8 @@
-﻿using InternScope.DTOs.User;
+using InternScope.Common;
+using InternScope.DTOs.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 [Authorize]
 [ApiController]
 [Route("user")]
@@ -13,45 +15,28 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
+    private Guid GetUserId() => Guid.Parse(
+        HttpContext.User.Claims.First(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
-        
     [HttpPost("send-verification-email")]
     public async Task<IActionResult> SendVerificationEmail([FromBody] string studentEmail)
     {
-        var userIdClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Unauthorized();
-
-        try
-        {
-            var userId = Guid.Parse(userIdClaim);
-            await _userService.SendVerificationEmailAsync(userId, studentEmail);
-            return Ok(new { message = "Doğrulama maili gönderildi." });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _userService.SendVerificationEmailAsync(GetUserId(), studentEmail);
+        return result.ToActionResult("Doğrulama maili gönderildi.");
     }
+
     [AllowAnonymous]
     [HttpGet("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromQuery] string token)
     {
         var result = await _userService.VerifyEmailAsync(token);
-        if (!result) return BadRequest(new { message = "Geçersiz veya süresi dolmuş token." });
-
-        return Ok(new { message = "Mail başarıyla doğrulandı!" });
+        return result.ToActionResult("Mail başarıyla doğrulandı!");
     }
+
     [HttpGet("me")]
     public async Task<IActionResult> GetMe()
     {
-        var userIdClaim = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (userIdClaim == null) return Unauthorized();
-
-        var userId = Guid.Parse(userIdClaim);
-        var user = await _userService.GetByIdAsync(userId);
-
+        var user = await _userService.GetByIdAsync(GetUserId());
         if (user == null) return NotFound();
 
         return Ok(new
@@ -66,35 +51,25 @@ public class UserController : ControllerBase
             universityId = user.UniversityId,
             universityName = user.University?.Name,
             departmentId = user.DepartmentId,
-            departmentName = user.Department?.Name
+            departmentName = user.Department?.Name,
+            linkedInProfileUrl = user.LinkedInProfileUrl
         });
     }
 
-    // Öğrenci okul/bölüm bilgisini kendisi girer/günceller.
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileInputModel input)
     {
-        var userIdClaim = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var result = await _userService.UpdateProfileAsync(GetUserId(), input.UniversityId, input.DepartmentId, input.LinkedInProfileUrl);
+        if (result.IsFailure) return result.Error!.ToActionResult();
 
-        if (userIdClaim == null) return Unauthorized();
-
-        try
+        var user = result.Value!;
+        return Ok(new
         {
-            var userId = Guid.Parse(userIdClaim);
-            var user = await _userService.UpdateProfileAsync(userId, input.UniversityId, input.DepartmentId);
-
-            return Ok(new
-            {
-                universityId = user.UniversityId,
-                universityName = user.University?.Name,
-                departmentId = user.DepartmentId,
-                departmentName = user.Department?.Name
-            });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+            universityId = user.UniversityId,
+            universityName = user.University?.Name,
+            departmentId = user.DepartmentId,
+            departmentName = user.Department?.Name,
+            linkedInProfileUrl = user.LinkedInProfileUrl
+        });
     }
 }

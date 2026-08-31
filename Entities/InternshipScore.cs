@@ -1,4 +1,4 @@
-﻿namespace InternScope.Entities
+namespace InternScope.Entities
 {
     public class InternshipScore : BaseEntity
     {
@@ -11,7 +11,6 @@
         public bool WouldRecommend { get; set; }
         public string? AdditionalTips { get; set; }
 
-        // Navigation Property
-        public Internship Internship { get; set; }
+        public Internship Internship { get; set; } = null!;
     }
 }

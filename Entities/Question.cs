@@ -1,12 +1,11 @@
-﻿namespace InternScope.Entities
+namespace InternScope.Entities
 {
     public class Question : BaseEntity
     {
-        public string QuestionText { get; set; }
+        public string QuestionText { get; set; } = null!;
         public int OrderIndex { get; set; }
         public bool IsActive { get; set; }
 
-        // Navigation Property
-        public ICollection<InternshipAnswer> Answers { get; set; }
+        public ICollection<InternshipAnswer> Answers { get; set; } = null!;
     }
 }

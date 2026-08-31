@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using InternScope.DTOs.Auth;
 using InternScope.Entities;
+namespace InternScope.Services;
 
 public class AuthService
 {
@@ -37,6 +38,12 @@ public class AuthService
             var outputModel = _mapper.Map<AuthOutputModel>(newUser);
             outputModel.Token = _tokenService.GenerateToken(newUser);
             return outputModel;
+        }
+
+        if (input.ProfilePictureUrl != null && existingUser.ProfilePictureUrl != input.ProfilePictureUrl)
+        {
+            existingUser.ProfilePictureUrl = input.ProfilePictureUrl;
+            await _context.SaveChangesAsync();
         }
 
         var output = _mapper.Map<AuthOutputModel>(existingUser);
