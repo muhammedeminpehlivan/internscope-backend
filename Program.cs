@@ -1,4 +1,8 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using InternScope.Middleware;
 using InternScope.Services;
+using InternScope.Validators;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +26,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CommentInputValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -74,6 +81,8 @@ builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<CityService>();
+builder.Services.AddScoped<CommentService>();
+builder.Services.AddScoped<ReactionService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -171,6 +180,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
         | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
 });
 app.UseCors("AllowFrontend");
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 
 

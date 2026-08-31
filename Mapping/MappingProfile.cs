@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using InternScope.DTOs;
 using InternScope.DTOs.Auth;
+using InternScope.DTOs.Comment;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
 
@@ -29,7 +30,11 @@ public class MappingProfile : Profile
             .ForMember(d => d.Scores, o => o.MapFrom(s => s.Score))
             .ForMember(d => d.Interview, o => o.MapFrom(s => s.InterviewProcess))
             .ForMember(d => d.AuthorName,
-                o => o.MapFrom(s => s.IsAnonymous ? "Anonim Kullanıcı" : s.User.FullName));
+                o => o.MapFrom(s => s.IsAnonymous ? "Anonim Kullanıcı" : s.User.FullName))
+            .ForMember(d => d.AuthorProfilePictureUrl,
+                o => o.MapFrom(s => s.IsAnonymous ? null : s.User.ProfilePictureUrl))
+            .ForMember(d => d.AuthorLinkedInProfileUrl,
+                o => o.MapFrom(s => s.IsAnonymous ? null : s.User.LinkedInProfileUrl));
 
         //University ve Department mapping
         CreateMap<University, UniversityOutputModel>();
@@ -50,5 +55,13 @@ public class MappingProfile : Profile
         // City mapping
         CreateMap<City, CityOutputModel>();
 
+        // Comment mapping — IsOwn runtime'da set edilir (requestingUserId bağlamsal)
+        Guid requestingUserId = default;
+        CreateMap<InternshipComment, CommentOutputModel>()
+            .ForMember(d => d.AuthorName, o => o.MapFrom(s => s.User.FullName))
+            .ForMember(d => d.AuthorProfilePictureUrl, o => o.MapFrom(s => s.User.ProfilePictureUrl))
+            .ForMember(d => d.AuthorLinkedInProfileUrl, o => o.MapFrom(s => s.User.LinkedInProfileUrl))
+            .ForMember(d => d.ReportCount, o => o.MapFrom(s => s.Reports.Count))
+            .ForMember(d => d.IsOwn, o => o.MapFrom(s => s.UserId == requestingUserId));
     }
 }

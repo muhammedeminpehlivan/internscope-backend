@@ -1,15 +1,15 @@
-﻿namespace InternScope.DTOs
+namespace InternScope.DTOs
 {
     public class UniversityStatOutputModel
     {
-        public string UniversityName { get; set; }
+        public string UniversityName { get; set; } = null!;
         public int ReviewCount { get; set; }
         public double AverageScore { get; set; }
     }
 
     public class DepartmentStatOutputModel
     {
-        public string DepartmentName { get; set; }
+        public string DepartmentName { get; set; } = null!;
         public int ReviewCount { get; set; }
         public double AverageScore { get; set; }
     }
@@ -25,7 +25,7 @@
 
     public class ApplicationMethodStatOutputModel
     {
-        public string Method { get; set; }
+        public string Method { get; set; } = null!;
         public int Count { get; set; }
         public double Percentage { get; set; }
     }

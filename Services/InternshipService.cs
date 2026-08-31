@@ -1,9 +1,9 @@
-﻿using AutoMapper;
-
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using InternScope.Common;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper.QueryableExtensions;
 using System.Text.Json;
 
 namespace InternScope.Services
@@ -15,29 +15,29 @@ namespace InternScope.Services
         private readonly DepartmentService _departmentService;
         private readonly CloudinaryService _cloudinaryService;
         private readonly IMapper _mapper;
+        private readonly ILogger<InternshipService> _logger;
 
-        public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper, DepartmentService departmentService, CloudinaryService cloudinaryService)
+        public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper,
+            DepartmentService departmentService, CloudinaryService cloudinaryService, ILogger<InternshipService> logger)
         {
             _context = context;
             _companyService = companyService;
             _mapper = mapper;
             _departmentService = departmentService;
             _cloudinaryService = cloudinaryService;
+            _logger = logger;
         }
 
-        public async Task<Guid> CreateInternshipAsync(Guid userId, InternshipInputModel input)
+        public async Task<Result<Guid>> CreateInternshipAsync(Guid userId, InternshipInputModel input)
         {
-            // 1. Kullanıcı mail doğrulaması yaptı mı? (iş kuralı)
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new Exception("Kullanıcı bulunamadı.");
+                return Error.NotFound("Kullanıcı bulunamadı.");
             if (!user.IsEmailVerified)
-                throw new Exception("Staj değerlendirmesi girmek için önce öğrenci mailinizi doğrulamalısınız.");
+                return Error.Validation("Staj değerlendirmesi girmek için önce öğrenci mailinizi doğrulamalısınız.");
 
-            // 2. Firmayı bul veya oluştur
             var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
 
-            // 3. Staj kaydını oluştur
             var internship = new Internship
             {
                 Id = Guid.NewGuid(),
@@ -55,40 +55,33 @@ namespace InternScope.Services
                 StipendMax = input.StipendMax,
                 Currency = string.IsNullOrWhiteSpace(input.Currency) ? "TRY" : input.Currency,
                 ReturnOfferReceived = input.ReturnOfferReceived,
-                IsSgkVerified = false,             // SGK yükleme ayrı adım
-                Status = InternshipStatus.Pending, // admin onayı bekleyecek
+                IsSgkVerified = false,
+                Status = InternshipStatus.Pending,
                 CreatedAt = DateTime.UtcNow
             };
 
-            // 4. Puanları bağla (AutoMapper: input -> entity)
             var score = _mapper.Map<InternshipScore>(input.Scores);
             score.Id = Guid.NewGuid();
             score.InternshipId = internship.Id;
             score.CreatedAt = DateTime.UtcNow;
 
-            // 5. Mülakat sürecini bağla
             var interview = _mapper.Map<InterviewProcess>(input.Interview);
             interview.Id = Guid.NewGuid();
             interview.InternshipId = internship.Id;
             interview.CreatedAt = DateTime.UtcNow;
 
-            // 6a. Profilde okul/bölüm boşsa staj kaydından otomatik doldur.
-            //     (Kullanıcı daha önce profilinden manuel girmişse dokunma.)
-            if (user.UniversityId == null)
-                user.UniversityId = input.UniversityId;
-            if (user.DepartmentId == null)
-                user.DepartmentId = input.DepartmentId;
+            if (user.UniversityId == null) user.UniversityId = input.UniversityId;
+            if (user.DepartmentId == null) user.DepartmentId = input.DepartmentId;
 
-            // 6b. Hepsini kaydet
             _context.Internships.Add(internship);
             _context.InternshipScores.Add(score);
             _context.InterviewProcesses.Add(interview);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Staj değerlendirmesi oluşturuldu: {InternshipId} — UserId={UserId}", internship.Id, userId);
             return internship.Id;
         }
 
-        // Sadece onaylanmış stajları getir (herkese açık)
         public async Task<List<InternshipOutputModel>> GetApprovedInternshipsAsync()
         {
             return await _context.Internships
@@ -98,7 +91,6 @@ namespace InternScope.Services
                 .ToListAsync();
         }
 
-        // Kullanıcının kendi stajları (her durumda)
         public async Task<List<InternshipOutputModel>> GetMyInternshipsAsync(Guid userId)
         {
             return await _context.Internships
@@ -108,25 +100,27 @@ namespace InternScope.Services
                 .ToListAsync();
         }
 
-        public async Task UploadSgkAsync(Guid userId, Guid internshipId, IFormFile file, string verificationCode)
+        public async Task<Result> UploadSgkAsync(Guid userId, Guid internshipId, IFormFile file, string verificationCode)
         {
             var internship = await _context.Internships.FindAsync(internshipId);
             if (internship == null)
-                throw new Exception("Staj bulunamadı.");
+                return Error.NotFound("Staj bulunamadı.");
             if (internship.UserId != userId)
-                throw new Exception("Bu staj size ait değil.");
+                return Error.Forbidden("Bu staj size ait değil.");
             if (string.IsNullOrWhiteSpace(verificationCode))
-                throw new Exception("Belge doğrulama kodu gerekli.");
+                return Error.Validation("Belge doğrulama kodu gerekli.");
 
             var url = await _cloudinaryService.UploadSgkDocumentAsync(file);
             internship.SgkDocumentUrl = url;
             internship.SgkVerificationCode = verificationCode.Trim();
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("SGK belgesi yüklendi: {InternshipId}", internshipId);
+            return Result.Success();
         }
 
-        // Kullanıcı stajını düzenler
-        public async Task UpdateAsync(Guid userId, Guid internshipId, InternshipInputModel input)
+        public async Task<Result> UpdateAsync(Guid userId, Guid internshipId, InternshipInputModel input)
         {
             var internship = await _context.Internships
                 .Include(i => i.Score)
@@ -134,28 +128,26 @@ namespace InternScope.Services
                 .FirstOrDefaultAsync(i => i.Id == internshipId);
 
             if (internship == null)
-                throw new Exception("Staj bulunamadı.");
+                return Error.NotFound("Staj bulunamadı.");
             if (internship.UserId != userId)
-                throw new Exception("Bu staj size ait değil.");
+                return Error.Forbidden("Bu staj size ait değil.");
 
             if (internship.Status == InternshipStatus.Approved)
             {
-                // Onaylı → canlı hali dursun, değişikliği beklet
                 internship.PendingChangesJson = JsonSerializer.Serialize(input);
                 internship.HasPendingChanges = true;
             }
             else
             {
-                // Pending/Rejected → zaten yayında değil, direkt uygula + tekrar onaya
                 await ApplyInputAsync(internship, input);
                 internship.Status = InternshipStatus.Pending;
             }
 
             internship.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            return Result.Success();
         }
 
-        // Ortak: bir InternshipInputModel'i mevcut stajın üstüne uygular
         public async Task ApplyInputAsync(Internship internship, InternshipInputModel input)
         {
             var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
@@ -192,9 +184,5 @@ namespace InternScope.Services
                 internship.InterviewProcess.Description = input.Interview.Description;
             }
         }
-
     }
-
-
-
 }

@@ -1,4 +1,5 @@
-﻿using InternScope.Services;
+using InternScope.Common;
+using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,10 +9,12 @@ using Microsoft.AspNetCore.Mvc;
 public class AdminController : ControllerBase
 {
     private readonly AdminService _adminService;
+    private readonly CommentService _commentService;
 
-    public AdminController(AdminService adminService)
+    public AdminController(AdminService adminService, CommentService commentService)
     {
         _adminService = adminService;
+        _commentService = commentService;
     }
 
     [HttpGet("pending")]
@@ -24,29 +27,17 @@ public class AdminController : ControllerBase
     [HttpPut("{id}/approve")]
     public async Task<IActionResult> Approve(Guid id, [FromQuery] bool verifySgk = false)
     {
-        try
-        {
-            var ok = await _adminService.ApproveAsync(id, verifySgk);
-            if (!ok) return NotFound(new { message = "Staj bulunamadı." });
-            return Ok(new
-            {
-                message = verifySgk
-                ? "Staj onaylandı ve SGK doğrulandı — kesinleşmiş staj. ✓"
-                : "Staj onaylandı."
-            });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _adminService.ApproveAsync(id, verifySgk);
+        return result.ToActionResult(verifySgk
+            ? "Staj onaylandı ve SGK doğrulandı — kesinleşmiş staj. ✓"
+            : "Staj onaylandı.");
     }
 
     [HttpPut("{id}/reject")]
     public async Task<IActionResult> Reject(Guid id)
     {
-        var ok = await _adminService.RejectAsync(id);
-        if (!ok) return NotFound(new { message = "Staj bulunamadı." });
-        return Ok(new { message = "Staj reddedildi." });
+        var result = await _adminService.RejectAsync(id);
+        return result.ToActionResult("Staj reddedildi.");
     }
 
     [HttpGet("all")]
@@ -57,14 +48,11 @@ public class AdminController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)    
+    public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await _adminService.DeleteAsync(id);
-        if (!ok) return NotFound(new { message = "Staj bulunamadı." });
-        return Ok(new { message = "Staj kalıcı olarak silindi." });
+        var result = await _adminService.DeleteAsync(id);
+        return result.ToActionResult("Staj kalıcı olarak silindi.");
     }
-
-
 
     [HttpGet("pending-changes")]
     public async Task<IActionResult> GetPendingChanges()
@@ -76,20 +64,35 @@ public class AdminController : ControllerBase
     [HttpPut("{id}/approve-changes")]
     public async Task<IActionResult> ApproveChanges(Guid id)
     {
-        try
-        {
-            var ok = await _adminService.ApprovePendingChangesAsync(id);
-            if (!ok) return NotFound(new { message = "Staj bulunamadı." });
-            return Ok(new { message = "Düzenleme onaylandı, staj güncellendi." });
-        }
-        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+        var result = await _adminService.ApprovePendingChangesAsync(id);
+        return result.ToActionResult("Düzenleme onaylandı, staj güncellendi.");
     }
 
     [HttpPut("{id}/reject-changes")]
     public async Task<IActionResult> RejectChanges(Guid id)
     {
-        var ok = await _adminService.RejectPendingChangesAsync(id);
-        if (!ok) return NotFound(new { message = "Staj bulunamadı." });
-        return Ok(new { message = "Düzenleme reddedildi, eski hali korundu." });
+        var result = await _adminService.RejectPendingChangesAsync(id);
+        return result.ToActionResult("Düzenleme reddedildi, eski hali korundu.");
+    }
+
+    [HttpGet("reported-comments")]
+    public async Task<IActionResult> GetReportedComments()
+    {
+        var list = await _commentService.GetReportedCommentsAsync();
+        return Ok(list);
+    }
+
+    [HttpDelete("comments/{commentId}")]
+    public async Task<IActionResult> DeleteComment(Guid commentId)
+    {
+        var result = await _commentService.AdminDeleteCommentAsync(commentId);
+        return result.ToActionResult("Yorum silindi.");
+    }
+
+    [HttpPut("comments/{commentId}/dismiss-reports")]
+    public async Task<IActionResult> DismissReports(Guid commentId)
+    {
+        await _commentService.AdminDismissReportsAsync(commentId);
+        return Ok(new { message = "Şikayetler kapatıldı, yorum yayında kalıyor." });
     }
 }
