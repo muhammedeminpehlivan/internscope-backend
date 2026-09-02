@@ -3,6 +3,8 @@ using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [Authorize(Roles = "Admin")]
 [ApiController]
 [Route("admin")]

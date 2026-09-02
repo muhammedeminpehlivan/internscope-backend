@@ -3,65 +3,64 @@ using InternScope.DTOs.Comment;
 using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace InternScope.Services
+namespace InternScope.Services;
+
+public class ReactionService
 {
-    public class ReactionService
+    private readonly AppDbContext _context;
+
+    public ReactionService(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public ReactionService(AppDbContext context)
+    // Aynı tepkiye tekrar basarsa kaldırır (toggle), farklı tepkiye basarsa değiştirir
+    public async Task<Result<ReactionSummaryModel>> UpsertReactionAsync(Guid userId, Guid internshipId, bool isPositive)
+    {
+        var internshipExists = await _context.Internships
+            .AnyAsync(i => i.Id == internshipId && i.Status == InternshipStatus.Approved);
+        if (!internshipExists)
+            return Error.NotFound("Staj bulunamadı.");
+
+        var existing = await _context.InternshipReactions
+            .FirstOrDefaultAsync(r => r.InternshipId == internshipId && r.UserId == userId);
+
+        if (existing != null)
         {
-            _context = context;
-        }
-
-        // Aynı tepkiye tekrar basarsa kaldırır (toggle), farklı tepkiye basarsa değiştirir
-        public async Task<Result<ReactionSummaryModel>> UpsertReactionAsync(Guid userId, Guid internshipId, bool isPositive)
-        {
-            var internshipExists = await _context.Internships
-                .AnyAsync(i => i.Id == internshipId && i.Status == InternshipStatus.Approved);
-            if (!internshipExists)
-                return Error.NotFound("Staj bulunamadı.");
-
-            var existing = await _context.InternshipReactions
-                .FirstOrDefaultAsync(r => r.InternshipId == internshipId && r.UserId == userId);
-
-            if (existing != null)
-            {
-                if (existing.IsPositive == isPositive)
-                    _context.InternshipReactions.Remove(existing); // toggle: aynıysa kaldır
-                else
-                    existing.IsPositive = isPositive; // farklıysa değiştir
-            }
+            if (existing.IsPositive == isPositive)
+                _context.InternshipReactions.Remove(existing); // toggle: aynıysa kaldır
             else
-            {
-                _context.InternshipReactions.Add(new InternshipReaction
-                {
-                    Id = Guid.NewGuid(),
-                    InternshipId = internshipId,
-                    UserId = userId,
-                    IsPositive = isPositive,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
-
-            await _context.SaveChangesAsync();
-            return await GetSummaryAsync(internshipId, userId);
+                existing.IsPositive = isPositive; // farklıysa değiştir
         }
-
-        public async Task<ReactionSummaryModel> GetSummaryAsync(Guid internshipId, Guid? userId)
+        else
         {
-            var reactions = await _context.InternshipReactions
-                .Where(r => r.InternshipId == internshipId)
-                .ToListAsync();
-
-            return new ReactionSummaryModel
+            _context.InternshipReactions.Add(new InternshipReaction
             {
-                Upvotes = reactions.Count(r => r.IsPositive),
-                Downvotes = reactions.Count(r => !r.IsPositive),
-                UserReaction = userId.HasValue
-                    ? reactions.FirstOrDefault(r => r.UserId == userId.Value)?.IsPositive
-                    : null
-            };
+                Id = Guid.NewGuid(),
+                InternshipId = internshipId,
+                UserId = userId,
+                IsPositive = isPositive,
+                CreatedAt = DateTime.UtcNow
+            });
         }
+
+        await _context.SaveChangesAsync();
+        return await GetSummaryAsync(internshipId, userId);
+    }
+
+    public async Task<ReactionSummaryModel> GetSummaryAsync(Guid internshipId, Guid? userId)
+    {
+        var reactions = await _context.InternshipReactions
+            .Where(r => r.InternshipId == internshipId)
+            .ToListAsync();
+
+        return new ReactionSummaryModel
+        {
+            Upvotes = reactions.Count(r => r.IsPositive),
+            Downvotes = reactions.Count(r => !r.IsPositive),
+            UserReaction = userId.HasValue
+                ? reactions.FirstOrDefault(r => r.UserId == userId.Value)?.IsPositive
+                : null
+        };
     }
 }

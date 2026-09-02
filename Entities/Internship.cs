@@ -18,7 +18,7 @@ namespace InternScope.Entities
         public InternshipTerm Term { get; set; }
         public int? StipendMin { get; set; }
         public int? StipendMax { get; set; }
-        public string Currency { get; set; } = "TRY";
+        public string? Currency { get; set; } = "TRY";
         public bool ReturnOfferReceived { get; set; }
         public string? SgkVerificationCode { get; set; }
         public Guid CityId { get; set; }

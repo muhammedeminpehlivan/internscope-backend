@@ -3,10 +3,12 @@ using InternScope.DTOs.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [Authorize]
 [ApiController]
 [Route("user")]
-public class UserController : ControllerBase
+public class UserController : ApiControllerBase
 {
     private readonly UserService _userService;
 
@@ -14,9 +16,6 @@ public class UserController : ControllerBase
     {
         _userService = userService;
     }
-
-    private Guid GetUserId() => Guid.Parse(
-        HttpContext.User.Claims.First(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
     [HttpPost("send-verification-email")]
     public async Task<IActionResult> SendVerificationEmail([FromBody] string studentEmail)

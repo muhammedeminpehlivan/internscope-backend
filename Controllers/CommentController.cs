@@ -4,10 +4,12 @@ using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [Authorize]
 [ApiController]
 [Route("internship/{internshipId}/comments")]
-public class CommentController : ControllerBase
+public class CommentController : ApiControllerBase
 {
     private readonly CommentService _commentService;
 
@@ -16,15 +18,11 @@ public class CommentController : ControllerBase
         _commentService = commentService;
     }
 
-    private Guid GetUserId() => Guid.Parse(
-        HttpContext.User.Claims.First(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetComments(Guid internshipId)
     {
-        var userId = HttpContext.User.Identity?.IsAuthenticated == true ? GetUserId() : (Guid?)null;
-        var comments = await _commentService.GetCommentsAsync(internshipId, userId);
+        var comments = await _commentService.GetCommentsAsync(internshipId, GetUserIdOrNull());
         return Ok(comments);
     }
 
@@ -53,7 +51,7 @@ public class CommentController : ControllerBase
 [Authorize]
 [ApiController]
 [Route("internship/{internshipId}/reactions")]
-public class ReactionController : ControllerBase
+public class ReactionController : ApiControllerBase
 {
     private readonly ReactionService _reactionService;
 
@@ -62,15 +60,11 @@ public class ReactionController : ControllerBase
         _reactionService = reactionService;
     }
 
-    private Guid GetUserId() => Guid.Parse(
-        HttpContext.User.Claims.First(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetReactions(Guid internshipId)
     {
-        var userId = HttpContext.User.Identity?.IsAuthenticated == true ? GetUserId() : (Guid?)null;
-        var summary = await _reactionService.GetSummaryAsync(internshipId, userId);
+        var summary = await _reactionService.GetSummaryAsync(internshipId, GetUserIdOrNull());
         return Ok(summary);
     }
 

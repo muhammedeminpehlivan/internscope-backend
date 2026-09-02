@@ -1,6 +1,8 @@
 ﻿using InternScope.Services;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [ApiController]
 [Route("statistics")]
 public class StatisticsController : ControllerBase
