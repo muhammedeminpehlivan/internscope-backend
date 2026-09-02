@@ -15,8 +15,13 @@ public class TokenService
 
     public string GenerateToken(User user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var jwtKey = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("Jwt:Key yapılandırması eksik.");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        // ExpireDays yoksa/geçersizse makul bir varsayıma düş (7 gün).
+        var expireDays = int.TryParse(_configuration["Jwt:ExpireDays"], out var days) ? days : 7;
 
         var claims = new[]
         {
@@ -30,7 +35,7 @@ public class TokenService
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(int.Parse(_configuration["Jwt:ExpireDays"])),
+            expires: DateTime.UtcNow.AddDays(expireDays),
             signingCredentials: credentials
         );
 

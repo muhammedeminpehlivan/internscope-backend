@@ -45,8 +45,9 @@ public static class AuthExtensions
         .AddOAuth("LinkedIn", options =>
         {
             options.SignInScheme = "Cookies";
-            options.ClientId = configuration["LinkedIn:ClientId"];
-            options.ClientSecret = configuration["LinkedIn:ClientSecret"];
+            // LinkedIn opsiyonel — config yoksa boş bırak, uygulama yine de ayağa kalksın.
+            options.ClientId = configuration["LinkedIn:ClientId"] ?? string.Empty;
+            options.ClientSecret = configuration["LinkedIn:ClientSecret"] ?? string.Empty;
             options.CallbackPath = "/auth/linkedin/callback";
             options.SaveTokens = true;
 

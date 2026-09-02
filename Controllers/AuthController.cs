@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
         var email = claims.FirstOrDefault(c => c.Type == "email")?.Value;
         var picture = claims.FirstOrDefault(c => c.Type == "picture")?.Value;
 
-        if (linkedInId == null) return Unauthorized();
+        if (linkedInId == null || fullName == null || email == null) return Unauthorized();
 
         var input = new AuthInputModel
         {

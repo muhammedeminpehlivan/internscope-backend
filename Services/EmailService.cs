@@ -15,11 +15,18 @@ public class EmailService
     {
         try
         {
-            
+            var senderEmail = _configuration["Mail:SenderEmail"]
+                ?? throw new InvalidOperationException("Mail:SenderEmail yapılandırması eksik.");
+            var host = _configuration["Mail:Host"]
+                ?? throw new InvalidOperationException("Mail:Host yapılandırması eksik.");
+            var password = _configuration["Mail:Password"]
+                ?? throw new InvalidOperationException("Mail:Password yapılandırması eksik.");
+            var port = int.TryParse(_configuration["Mail:Port"], out var p) ? p : 587;
+
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(
                 _configuration["Mail:SenderName"],
-                _configuration["Mail:SenderEmail"]
+                senderEmail
             ));
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = subject;
@@ -27,13 +34,13 @@ public class EmailService
 
             using var client = new SmtpClient();
             await client.ConnectAsync(
-                _configuration["Mail:Host"],
-                int.Parse(_configuration["Mail:Port"]),
+                host,
+                port,
                 MailKit.Security.SecureSocketOptions.StartTls
             );
             await client.AuthenticateAsync(
-                _configuration["Mail:SenderEmail"],
-                _configuration["Mail:Password"]
+                senderEmail,
+                password
             );
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
