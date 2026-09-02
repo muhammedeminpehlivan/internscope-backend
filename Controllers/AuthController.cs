@@ -4,6 +4,8 @@ using InternScope.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [ApiController]
 [Route("auth")]
 public class AuthController : ControllerBase

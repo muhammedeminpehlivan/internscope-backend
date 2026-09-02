@@ -1,6 +1,8 @@
 ﻿using InternScope.Services;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [ApiController]
 [Route("company")]
 public class CompanyController : ControllerBase
@@ -17,6 +19,14 @@ public class CompanyController : ControllerBase
     {
         var list = await _companyService.GetAllAsync();
         return Ok(list);
+    }
+
+    // Staj formu — şirket adı yazarken eşleşen mevcut firmaları öner
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string q)
+    {
+        var suggestions = await _companyService.SearchAsync(q);
+        return Ok(suggestions);
     }
 
     [HttpGet("{slug}")]

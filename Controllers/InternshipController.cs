@@ -4,10 +4,12 @@ using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace InternScope.Controllers;
+
 [Authorize]
 [ApiController]
 [Route("internship")]
-public class InternshipController : ControllerBase
+public class InternshipController : ApiControllerBase
 {
     private readonly InternshipService _internshipService;
 
@@ -15,9 +17,6 @@ public class InternshipController : ControllerBase
     {
         _internshipService = internshipService;
     }
-
-    private Guid GetUserId() => Guid.Parse(
-        HttpContext.User.Claims.First(c => c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] InternshipInputModel input)

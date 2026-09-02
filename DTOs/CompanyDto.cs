@@ -12,6 +12,20 @@ namespace InternScope.DTOs
         public int ReviewCount { get; set; }
     }
 
+    // Staj formu — şirket adı autocomplete önerisi
+    public class CompanySuggestionOutputModel
+    {
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
+    }
+
+    // Firma detayı — o firmada staj yapanların üniversite dağılımı (ilk 5)
+    public class UniversityBreakdownOutputModel
+    {
+        public string UniversityName { get; set; } = null!;
+        public int InternCount { get; set; }
+    }
+
     // Kategori ortalamaları
     public class CategoryAverages
     {
@@ -33,6 +47,7 @@ namespace InternScope.DTOs
         public CategoryAverages CategoryAverages { get; set; } = null!;
         public double ReturnOfferRate { get; set; }
         public int ReturnOfferCount { get; set; }
+        public List<UniversityBreakdownOutputModel> UniversityBreakdown { get; set; } = null!;
         public List<InternshipOutputModel> Reviews { get; set; } = null!;
     }
 }
