@@ -23,6 +23,9 @@ public static class ServiceExtensions
 
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+        // Brevo mail API'si için HttpClient (EmailService IHttpClientFactory kullanıyor)
+        services.AddHttpClient();
+
         services.AddScoped<TokenService>();
         services.AddScoped<AuthService>();
         services.AddScoped<UserService>();

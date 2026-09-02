@@ -60,7 +60,7 @@ public class UserService
         var verificationLink = $"{backendUrl}/user/verify-email?token={token}";
 
         var body = $@"
-            <h2>InternScope - Mail Doğrulama</h2>
+            <h2>StajIn - Mail Doğrulama</h2>
             <p>Merhaba {user.FullName},</p>
             <p>Öğrenci mailini doğrulamak için aşağıdaki butona tıkla:</p>
             <a href='{verificationLink}' style='background:#0A66C2;color:white;padding:10px 20px;border-radius:5px;text-decoration:none;'>
@@ -70,7 +70,7 @@ public class UserService
         ";
 
         _logger.LogInformation("Doğrulama maili gönderiliyor: {Email}", studentEmail);
-        await _emailService.SendEmailAsync(studentEmail, "InternScope - Mail Doğrulama", body);
+        await _emailService.SendEmailAsync(studentEmail, "StajIn - Mail Doğrulama", body);
         return Result.Success();
     }
 
