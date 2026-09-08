@@ -8,17 +8,17 @@ using System.Text.Json;
 
 namespace InternScope.Services;
 
-public class InternshipService
+public class InternshipService : IInternshipService
 {
     private readonly AppDbContext _context;
-    private readonly CompanyService _companyService;
-    private readonly DepartmentService _departmentService;
-    private readonly CloudinaryService _cloudinaryService;
+    private readonly ICompanyService _companyService;
+    private readonly IDepartmentService _departmentService;
+    private readonly ICloudinaryService _cloudinaryService;
     private readonly IMapper _mapper;
     private readonly ILogger<InternshipService> _logger;
 
-    public InternshipService(AppDbContext context, CompanyService companyService, IMapper mapper,
-        DepartmentService departmentService, CloudinaryService cloudinaryService, ILogger<InternshipService> logger)
+    public InternshipService(AppDbContext context, ICompanyService companyService, IMapper mapper,
+        IDepartmentService departmentService, ICloudinaryService cloudinaryService, ILogger<InternshipService> logger)
     {
         _context = context;
         _companyService = companyService;
@@ -141,10 +141,38 @@ public class InternshipService
         {
             await ApplyInputAsync(internship, input);
             internship.Status = InternshipStatus.Pending;
+            // Reddedilen kayıt yeniden incelemeye giriyor — eski gerekçe artık geçersiz.
+            internship.RejectionReason = null;
         }
 
         internship.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        return Result.Success();
+    }
+
+    // Kullanıcının kendi staj değerlendirmesini kalıcı silmesi. Admin silme akışıyla
+    // aynı cascade mantığı; ek olarak sahiplik kontrolü var.
+    public async Task<Result> DeleteAsync(Guid userId, Guid internshipId)
+    {
+        var internship = await _context.Internships
+            .Include(i => i.Score)
+            .Include(i => i.InterviewProcess)
+            .Include(i => i.Answers)
+            .FirstOrDefaultAsync(i => i.Id == internshipId);
+
+        if (internship == null)
+            return Error.NotFound("Staj bulunamadı.");
+        if (internship.UserId != userId)
+            return Error.Forbidden("Bu staj size ait değil.");
+
+        if (internship.Score != null) _context.InternshipScores.Remove(internship.Score);
+        if (internship.InterviewProcess != null) _context.InterviewProcesses.Remove(internship.InterviewProcess);
+        if (internship.Answers?.Any() == true) _context.InternshipAnswers.RemoveRange(internship.Answers);
+
+        _context.Internships.Remove(internship);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Kullanıcı kendi stajını sildi: {InternshipId} — UserId={UserId}", internshipId, userId);
         return Result.Success();
     }
 

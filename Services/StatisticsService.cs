@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services;
 
-public class StatisticsService
+public class StatisticsService : IStatisticsService
 {
     private readonly AppDbContext _context;
 

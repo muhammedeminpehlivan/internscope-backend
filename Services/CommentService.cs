@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services;
 
-public class CommentService
+public class CommentService : ICommentService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;

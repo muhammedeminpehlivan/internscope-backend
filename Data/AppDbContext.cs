@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using InternScope.Entities;
 
+namespace InternScope.Data;
+
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }

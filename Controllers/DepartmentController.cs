@@ -7,9 +7,9 @@ namespace InternScope.Controllers;
 [Route("department")]
 public class DepartmentController : ControllerBase
 {
-    private readonly DepartmentService _departmentService;
+    private readonly IDepartmentService _departmentService;
 
-    public DepartmentController(DepartmentService departmentService)
+    public DepartmentController(IDepartmentService departmentService)
     {
         _departmentService = departmentService;
     }

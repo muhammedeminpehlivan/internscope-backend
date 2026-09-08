@@ -1,7 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using InternScope.Common;
-using InternScope.DTOs;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -9,14 +8,14 @@ using System.Text.Json;
 
 namespace InternScope.Services;
 
-public class AdminService
+public class AdminService : IAdminService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
-    private readonly InternshipService _internshipService;
+    private readonly IInternshipService _internshipService;
     private readonly ILogger<AdminService> _logger;
 
-    public AdminService(AppDbContext context, IMapper mapper, InternshipService internshipService, ILogger<AdminService> logger)
+    public AdminService(AppDbContext context, IMapper mapper, IInternshipService internshipService, ILogger<AdminService> logger)
     {
         _context = context;
         _mapper = mapper;
@@ -50,16 +49,17 @@ public class AdminService
         return Result.Success();
     }
 
-    public async Task<Result> RejectAsync(Guid id)
+    public async Task<Result> RejectAsync(Guid id, string? reason)
     {
         var internship = await _context.Internships.FindAsync(id);
         if (internship == null) return Error.NotFound("Staj bulunamadı.");
 
         internship.Status = InternshipStatus.Rejected;
+        internship.RejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         internship.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Staj reddedildi: {InternshipId}", id);
+        _logger.LogInformation("Staj reddedildi: {InternshipId} (gerekçe: {HasReason})", id, internship.RejectionReason != null);
         return Result.Success();
     }
 

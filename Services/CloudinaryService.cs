@@ -4,7 +4,7 @@ using InternScope.Exceptions;
 
 namespace InternScope.Services;
 
-public class CloudinaryService
+public class CloudinaryService : ICloudinaryService
 {
     private readonly Cloudinary _cloudinary;
     private readonly ILogger<CloudinaryService> _logger;

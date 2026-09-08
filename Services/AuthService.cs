@@ -3,13 +3,13 @@ using InternScope.DTOs.Auth;
 using InternScope.Entities;
 namespace InternScope.Services;
 
-public class AuthService
+public class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
-    private readonly TokenService _tokenService;
+    private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
 
-    public AuthService(AppDbContext context, TokenService tokenService, IMapper mapper)
+    public AuthService(AppDbContext context, ITokenService tokenService, IMapper mapper)
     {
         _context = context;
         _tokenService = tokenService;

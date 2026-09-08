@@ -13,6 +13,9 @@ namespace InternScope.Entities
         public bool IsSgkVerified { get; set; }
         public string? SgkDocumentUrl { get; set; }
         public InternshipStatus Status { get; set; }
+        // Admin reddederken opsiyonel olarak girdiği gerekçe. Kullanıcı "stajlarım"
+        // ekranında reddedilen kaydında bunu görür. Kayıt tekrar Pending'e dönünce temizlenir.
+        public string? RejectionReason { get; set; }
         public bool HasPendingChanges { get; set; }
         public string? PendingChangesJson { get; set; }
         public InternshipTerm Term { get; set; }

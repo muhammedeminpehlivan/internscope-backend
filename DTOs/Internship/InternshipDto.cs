@@ -52,6 +52,8 @@ namespace InternScope.DTOs.Internship
         public bool IsAnonymous { get; set; }
         public bool IsSgkVerified { get; set; }
         public string Status { get; set; } = null!;
+        // Sadece reddedilen stajlarda dolu; admin gerekçe yazmadıysa null.
+        public string? RejectionReason { get; set; }
         public string Term { get; set; } = null!;
         public int? StipendMin { get; set; }
         public int? StipendMax { get; set; }

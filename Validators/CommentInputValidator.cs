@@ -1,15 +1,14 @@
 using FluentValidation;
 using InternScope.DTOs.Comment;
 
-namespace InternScope.Validators
+namespace InternScope.Validators;
+
+public class CommentInputValidator : AbstractValidator<CommentInputModel>
 {
-    public class CommentInputValidator : AbstractValidator<CommentInputModel>
+    public CommentInputValidator()
     {
-        public CommentInputValidator()
-        {
-            RuleFor(x => x.Content)
-                .NotEmpty().WithMessage("Yorum boş olamaz.")
-                .MaximumLength(1000).WithMessage("Yorum en fazla 1000 karakter olabilir.");
-        }
+        RuleFor(x => x.Content)
+            .NotEmpty().WithMessage("Yorum boş olamaz.")
+            .MaximumLength(1000).WithMessage("Yorum en fazla 1000 karakter olabilir.");
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services;
 
-public class DepartmentService
+public class DepartmentService : IDepartmentService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;

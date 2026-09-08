@@ -10,12 +10,12 @@ namespace InternScope.Controllers;
 [Route("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly AuthService _authService;
+    private readonly IAuthService _authService;
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
 
 
-    public AuthController(AuthService authService, IMapper mapper, IConfiguration configuration)
+    public AuthController(IAuthService authService, IMapper mapper, IConfiguration configuration)
     {
         _authService = authService;
         _mapper = mapper;

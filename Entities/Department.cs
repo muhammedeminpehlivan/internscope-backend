@@ -1,9 +1,8 @@
-namespace InternScope.Entities
-{
-    public class Department : BaseEntity
-    {
-        public string Name { get; set; } = null!;
+namespace InternScope.Entities;
 
-        public ICollection<Internship> Internships { get; set; } = null!;
-    }
+public class Department : BaseEntity
+{
+    public string Name { get; set; } = null!;
+
+    public ICollection<Internship> Internships { get; set; } = null!;
 }
