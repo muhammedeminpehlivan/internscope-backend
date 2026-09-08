@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services;
 
-public class CityService
+public class CityService : ICityService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;

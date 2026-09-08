@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services;
 
-public class CompanyService
+public class CompanyService : ICompanyService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;

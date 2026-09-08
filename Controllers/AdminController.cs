@@ -1,4 +1,5 @@
 using InternScope.Common;
+using InternScope.DTOs.Internship;
 using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,10 @@ namespace InternScope.Controllers;
 [Route("admin")]
 public class AdminController : ControllerBase
 {
-    private readonly AdminService _adminService;
-    private readonly CommentService _commentService;
+    private readonly IAdminService _adminService;
+    private readonly ICommentService _commentService;
 
-    public AdminController(AdminService adminService, CommentService commentService)
+    public AdminController(IAdminService adminService, ICommentService commentService)
     {
         _adminService = adminService;
         _commentService = commentService;
@@ -36,9 +37,9 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("{id}/reject")]
-    public async Task<IActionResult> Reject(Guid id)
+    public async Task<IActionResult> Reject(Guid id, [FromBody] RejectInputModel? input)
     {
-        var result = await _adminService.RejectAsync(id);
+        var result = await _adminService.RejectAsync(id, input?.Reason);
         return result.ToActionResult("Staj reddedildi.");
     }
 

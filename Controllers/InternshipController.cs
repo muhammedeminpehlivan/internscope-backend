@@ -11,9 +11,9 @@ namespace InternScope.Controllers;
 [Route("internship")]
 public class InternshipController : ApiControllerBase
 {
-    private readonly InternshipService _internshipService;
+    private readonly IInternshipService _internshipService;
 
-    public InternshipController(InternshipService internshipService)
+    public InternshipController(IInternshipService internshipService)
     {
         _internshipService = internshipService;
     }
@@ -32,6 +32,13 @@ public class InternshipController : ApiControllerBase
     {
         var result = await _internshipService.UpdateAsync(GetUserId(), id, input);
         return result.ToActionResult("Düzenlemeniz alındı. Admin onayına kadar eski haliniz yayında kalacak.");
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await _internshipService.DeleteAsync(GetUserId(), id);
+        return result.ToActionResult("Staj değerlendirmeniz silindi.");
     }
 
     [HttpGet]

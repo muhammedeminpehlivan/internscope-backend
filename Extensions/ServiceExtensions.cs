@@ -26,20 +26,20 @@ public static class ServiceExtensions
         // Brevo mail API'si için HttpClient (EmailService IHttpClientFactory kullanıyor)
         services.AddHttpClient();
 
-        services.AddScoped<TokenService>();
-        services.AddScoped<AuthService>();
-        services.AddScoped<UserService>();
-        services.AddScoped<EmailService>();
-        services.AddScoped<CompanyService>();
-        services.AddScoped<InternshipService>();
-        services.AddScoped<UniversityService>();
-        services.AddScoped<DepartmentService>();
-        services.AddScoped<StatisticsService>();
-        services.AddScoped<AdminService>();
-        services.AddScoped<CloudinaryService>();
-        services.AddScoped<CityService>();
-        services.AddScoped<CommentService>();
-        services.AddScoped<ReactionService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ICompanyService, CompanyService>();
+        services.AddScoped<IInternshipService, InternshipService>();
+        services.AddScoped<IUniversityService, UniversityService>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
+        services.AddScoped<ICityService, CityService>();
+        services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<IReactionService, ReactionService>();
 
         return services;
     }

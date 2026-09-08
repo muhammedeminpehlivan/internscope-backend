@@ -5,6 +5,8 @@ using InternScope.DTOs.Comment;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
 
+namespace InternScope.Mapping;
+
 public class MappingProfile : Profile
 {
     public MappingProfile()

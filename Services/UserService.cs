@@ -2,14 +2,16 @@ using InternScope.Common;
 using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class UserService
+namespace InternScope.Services;
+
+public class UserService : IUserService
 {
     private readonly AppDbContext _context;
-    private readonly EmailService _emailService;
+    private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<UserService> _logger;
 
-    public UserService(AppDbContext context, EmailService emailService, IConfiguration configuration, ILogger<UserService> logger)
+    public UserService(AppDbContext context, IEmailService emailService, IConfiguration configuration, ILogger<UserService> logger)
     {
         _context = context;
         _emailService = emailService;

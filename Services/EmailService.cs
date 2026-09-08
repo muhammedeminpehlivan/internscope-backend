@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 
-public class EmailService
+namespace InternScope.Services;
+
+public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;

@@ -11,9 +11,9 @@ namespace InternScope.Controllers;
 [Route("internship/{internshipId}/comments")]
 public class CommentController : ApiControllerBase
 {
-    private readonly CommentService _commentService;
+    private readonly ICommentService _commentService;
 
-    public CommentController(CommentService commentService)
+    public CommentController(ICommentService commentService)
     {
         _commentService = commentService;
     }
@@ -53,9 +53,9 @@ public class CommentController : ApiControllerBase
 [Route("internship/{internshipId}/reactions")]
 public class ReactionController : ApiControllerBase
 {
-    private readonly ReactionService _reactionService;
+    private readonly IReactionService _reactionService;
 
-    public ReactionController(ReactionService reactionService)
+    public ReactionController(IReactionService reactionService)
     {
         _reactionService = reactionService;
     }

@@ -7,6 +7,12 @@
     <UserSecretsId>7a40812f-b4d9-4ab2-bff9-288565d2a795</UserSecretsId>
   </PropertyGroup>
 
+  <!-- AppDbContext ve DbInitializer InternScope.Data namespace'inde; her tüketiciye
+       (14 servis, Program.cs, migration'lar) tek tek using eklemek yerine global using. -->
+  <ItemGroup>
+    <Using Include="InternScope.Data" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />

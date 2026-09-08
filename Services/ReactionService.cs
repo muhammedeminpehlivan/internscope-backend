@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternScope.Services;
 
-public class ReactionService
+public class ReactionService : IReactionService
 {
     private readonly AppDbContext _context;
 

@@ -1,5 +1,7 @@
 ﻿using InternScope.Entities;
 
+namespace InternScope.Data;
+
 public static class DbInitializer
 {
     public static void SeedUniversities(AppDbContext context)

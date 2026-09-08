@@ -7,9 +7,9 @@ namespace InternScope.Controllers;
 [Route("company")]
 public class CompanyController : ControllerBase
 {
-    private readonly CompanyService _companyService;
+    private readonly ICompanyService _companyService;
 
-    public CompanyController(CompanyService companyService)
+    public CompanyController(ICompanyService companyService)
     {
         _companyService = companyService;
     }

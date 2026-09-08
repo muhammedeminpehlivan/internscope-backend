@@ -7,9 +7,9 @@ namespace InternScope.Controllers;
 [Route("city")]
 public class CityController : ControllerBase
 {
-    private readonly CityService _cityService;
+    private readonly ICityService _cityService;
 
-    public CityController(CityService cityService)
+    public CityController(ICityService cityService)
     {
         _cityService = cityService;
     }
