@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<InternshipComment> InternshipComments { get; set; }
     public DbSet<CommentReaction> CommentReactions { get; set; }
     public DbSet<CommentReport> CommentReports { get; set; }
+    public DbSet<NewsArticle> NewsArticles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,6 +73,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CommentReaction>(b =>
         {
             b.HasIndex(r => new { r.CommentId, r.UserId }).IsUnique();
+        });
+
+        // Aynı haber (SourceUrl) iki kez eklenmesin + tarihe göre listeleme hızlı olsun
+        modelBuilder.Entity<NewsArticle>(b =>
+        {
+            b.HasIndex(n => n.SourceUrl).IsUnique();
+            b.HasIndex(n => n.PublishedAt);
         });
 
         // Bir kullanıcı aynı yorumu sadece bir kez şikayet edebilir

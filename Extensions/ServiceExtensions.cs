@@ -40,6 +40,10 @@ public static class ServiceExtensions
         services.AddScoped<ICityService, CityService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IReactionService, ReactionService>();
+        services.AddScoped<INewsService, NewsService>();
+
+        // Haberleri periyodik olarak RSS kaynaklarından çekip DB'ye cache'ler
+        services.AddHostedService<NewsBackgroundService>();
 
         return services;
     }
