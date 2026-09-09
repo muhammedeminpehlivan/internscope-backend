@@ -15,6 +15,9 @@ namespace InternScope.DTOs.Comment
         public DateTime CreatedAt { get; set; }
         public bool IsOwn { get; set; }
         public int ReportCount { get; set; }
+        public int Upvotes { get; set; }
+        public int Downvotes { get; set; }
+        public bool? UserReaction { get; set; } // null=yok, true=like, false=dislike
     }
 
     public class ReactionInputModel

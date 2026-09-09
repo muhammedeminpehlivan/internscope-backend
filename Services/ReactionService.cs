@@ -15,29 +15,29 @@ public class ReactionService : IReactionService
     }
 
     // Aynı tepkiye tekrar basarsa kaldırır (toggle), farklı tepkiye basarsa değiştirir
-    public async Task<Result<ReactionSummaryModel>> UpsertReactionAsync(Guid userId, Guid internshipId, bool isPositive)
+    public async Task<Result<ReactionSummaryModel>> UpsertReactionAsync(Guid userId, Guid commentId, bool isPositive)
     {
-        var internshipExists = await _context.Internships
-            .AnyAsync(i => i.Id == internshipId && i.Status == InternshipStatus.Approved);
-        if (!internshipExists)
-            return Error.NotFound("Staj bulunamadı.");
+        var commentExists = await _context.InternshipComments
+            .AnyAsync(c => c.Id == commentId && !c.IsDeleted);
+        if (!commentExists)
+            return Error.NotFound("Yorum bulunamadı.");
 
-        var existing = await _context.InternshipReactions
-            .FirstOrDefaultAsync(r => r.InternshipId == internshipId && r.UserId == userId);
+        var existing = await _context.CommentReactions
+            .FirstOrDefaultAsync(r => r.CommentId == commentId && r.UserId == userId);
 
         if (existing != null)
         {
             if (existing.IsPositive == isPositive)
-                _context.InternshipReactions.Remove(existing); // toggle: aynıysa kaldır
+                _context.CommentReactions.Remove(existing); // toggle: aynıysa kaldır
             else
                 existing.IsPositive = isPositive; // farklıysa değiştir
         }
         else
         {
-            _context.InternshipReactions.Add(new InternshipReaction
+            _context.CommentReactions.Add(new CommentReaction
             {
                 Id = Guid.NewGuid(),
-                InternshipId = internshipId,
+                CommentId = commentId,
                 UserId = userId,
                 IsPositive = isPositive,
                 CreatedAt = DateTime.UtcNow
@@ -45,13 +45,13 @@ public class ReactionService : IReactionService
         }
 
         await _context.SaveChangesAsync();
-        return await GetSummaryAsync(internshipId, userId);
+        return await GetSummaryAsync(commentId, userId);
     }
 
-    public async Task<ReactionSummaryModel> GetSummaryAsync(Guid internshipId, Guid? userId)
+    public async Task<ReactionSummaryModel> GetSummaryAsync(Guid commentId, Guid? userId)
     {
-        var reactions = await _context.InternshipReactions
-            .Where(r => r.InternshipId == internshipId)
+        var reactions = await _context.CommentReactions
+            .Where(r => r.CommentId == commentId)
             .ToListAsync();
 
         return new ReactionSummaryModel

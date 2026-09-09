@@ -50,7 +50,7 @@ public class CommentController : ApiControllerBase
 
 [Authorize]
 [ApiController]
-[Route("internship/{internshipId}/reactions")]
+[Route("comment/{commentId}/reactions")]
 public class ReactionController : ApiControllerBase
 {
     private readonly IReactionService _reactionService;
@@ -62,16 +62,16 @@ public class ReactionController : ApiControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetReactions(Guid internshipId)
+    public async Task<IActionResult> GetReactions(Guid commentId)
     {
-        var summary = await _reactionService.GetSummaryAsync(internshipId, GetUserIdOrNull());
+        var summary = await _reactionService.GetSummaryAsync(commentId, GetUserIdOrNull());
         return Ok(summary);
     }
 
     [HttpPost]
-    public async Task<IActionResult> React(Guid internshipId, [FromBody] ReactionInputModel input)
+    public async Task<IActionResult> React(Guid commentId, [FromBody] ReactionInputModel input)
     {
-        var result = await _reactionService.UpsertReactionAsync(GetUserId(), internshipId, input.IsPositive);
+        var result = await _reactionService.UpsertReactionAsync(GetUserId(), commentId, input.IsPositive);
         return result.ToActionResult();
     }
 }

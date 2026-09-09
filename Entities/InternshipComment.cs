@@ -10,4 +10,5 @@ public class InternshipComment : BaseEntity
     public Internship Internship { get; set; } = null!;
     public User User { get; set; } = null!;
     public ICollection<CommentReport> Reports { get; set; } = null!;
+    public ICollection<CommentReaction> Reactions { get; set; } = null!;
 }

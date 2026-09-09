@@ -136,6 +136,8 @@ public class InternshipService : IInternshipService
         {
             internship.PendingChangesJson = JsonSerializer.Serialize(input);
             internship.HasPendingChanges = true;
+            // Yeni düzenleme önceki red gerekçesini geçersiz kılar.
+            internship.ChangeRejectionReason = null;
         }
         else
         {
@@ -196,19 +198,19 @@ public class InternshipService : IInternshipService
 
         if (internship.Score != null)
         {
-            internship.Score.LearningScore = input.Scores.LearningScore;
-            internship.Score.MentoringScore = input.Scores.MentoringScore;
-            internship.Score.TechInfraScore = input.Scores.TechInfraScore;
-            internship.Score.WorkEnvironmentScore = input.Scores.WorkEnvironmentScore;
-            internship.Score.SalaryScore = input.Scores.SalaryScore;
-            internship.Score.WouldRecommend = input.Scores.WouldRecommend;
+            internship.Score.LearningScore = input.Scores.LearningScore.GetValueOrDefault();
+            internship.Score.MentoringScore = input.Scores.MentoringScore.GetValueOrDefault();
+            internship.Score.TechInfraScore = input.Scores.TechInfraScore.GetValueOrDefault();
+            internship.Score.WorkEnvironmentScore = input.Scores.WorkEnvironmentScore.GetValueOrDefault();
+            internship.Score.SalaryScore = input.Scores.SalaryScore.GetValueOrDefault();
+            internship.Score.WouldRecommend = input.Scores.WouldRecommend.GetValueOrDefault();
             internship.Score.AdditionalTips = input.Scores.AdditionalTips;
         }
 
         if (internship.InterviewProcess != null)
         {
-            internship.InterviewProcess.ApplicationMethod = input.Interview.ApplicationMethod;
-            internship.InterviewProcess.StageCount = input.Interview.StageCount;
+            internship.InterviewProcess.ApplicationMethod = input.Interview.ApplicationMethod.GetValueOrDefault();
+            internship.InterviewProcess.StageCount = input.Interview.StageCount.GetValueOrDefault();
             internship.InterviewProcess.Description = input.Interview.Description;
         }
     }
