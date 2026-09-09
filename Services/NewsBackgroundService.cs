@@ -102,34 +102,56 @@ public class NewsBackgroundService : BackgroundService
             }
         }
 
-        if (candidates.Count == 0) return;
-
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Dedup: aynı SourceUrl'e sahip haber (RSS guid link olarak kullanılır) zaten varsa ekleme.
-        var incomingUrls = candidates.Select(c => c.SourceUrl).Distinct().ToList();
-        var existingUrls = await context.NewsArticles
-            .Where(n => incomingUrls.Contains(n.SourceUrl))
-            .Select(n => n.SourceUrl)
-            .ToListAsync(ct);
-        var existingSet = existingUrls.ToHashSet();
-
-        var toInsert = candidates
-            .GroupBy(c => c.SourceUrl)
-            .Where(g => !existingSet.Contains(g.Key))
-            .Select(g => g.First())
-            .ToList();
-
-        if (toInsert.Count == 0)
+        if (candidates.Count > 0)
         {
-            _logger.LogInformation("Haber çekimi tamam — yeni haber yok.");
-            return;
+            // Dedup: aynı SourceUrl'e sahip haber (RSS guid link olarak kullanılır) zaten varsa ekleme.
+            var incomingUrls = candidates.Select(c => c.SourceUrl).Distinct().ToList();
+            var existingUrls = await context.NewsArticles
+                .Where(n => incomingUrls.Contains(n.SourceUrl))
+                .Select(n => n.SourceUrl)
+                .ToListAsync(ct);
+            var existingSet = existingUrls.ToHashSet();
+
+            var toInsert = candidates
+                .GroupBy(c => c.SourceUrl)
+                .Where(g => !existingSet.Contains(g.Key))
+                .Select(g => g.First())
+                .ToList();
+
+            if (toInsert.Count > 0)
+            {
+                context.NewsArticles.AddRange(toInsert);
+                await context.SaveChangesAsync(ct);
+                _logger.LogInformation("Haber çekimi tamam — {Count} yeni haber eklendi.", toInsert.Count);
+            }
+            else
+            {
+                _logger.LogInformation("Haber çekimi tamam — yeni haber yok.");
+            }
         }
 
-        context.NewsArticles.AddRange(toInsert);
-        await context.SaveChangesAsync(ct);
-        _logger.LogInformation("Haber çekimi tamam — {Count} yeni haber eklendi.", toInsert.Count);
+        await CleanupOldNewsAsync(context, ct);
+    }
+
+    // Eski haberleri temizler ki tablo sürekli şişmesin. Varsayılan 30 gün;
+    // NEWS_RETENTION_DAYS / News:RetentionDays ile ayarlanır.
+    private async Task CleanupOldNewsAsync(AppDbContext context, CancellationToken ct)
+    {
+        var retentionDays = _configuration.GetValue<int?>("NEWS_RETENTION_DAYS")
+            ?? _configuration.GetValue<int?>("News:RetentionDays")
+            ?? 30;
+        if (retentionDays < 1) return; // 0/negatif → temizlik kapalı
+
+        var cutoff = DateTime.UtcNow.AddDays(-retentionDays);
+        var deleted = await context.NewsArticles
+            .Where(n => n.PublishedAt < cutoff)
+            .ExecuteDeleteAsync(ct);
+
+        if (deleted > 0)
+            _logger.LogInformation("Eski haber temizliği — {Count} haber silindi ({Days} günden eski).", deleted, retentionDays);
     }
 
     // Öncelik: NEWS_RSS_URLS env var (virgülle ayrılmış URL listesi, Render için).
