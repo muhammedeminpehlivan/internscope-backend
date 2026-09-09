@@ -57,6 +57,9 @@ public class MappingProfile : Profile
         // City mapping
         CreateMap<City, CityOutputModel>();
 
+        // News mapping — alanlar birebir aynı isimli, konvansiyonla eşlenir
+        CreateMap<NewsArticle, DTOs.News.NewsItemOutputModel>();
+
         // Comment mapping — IsOwn runtime'da set edilir (requestingUserId bağlamsal)
         Guid requestingUserId = default;
         CreateMap<InternshipComment, CommentOutputModel>()
