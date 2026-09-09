@@ -162,7 +162,7 @@ public class NewsBackgroundService : BackgroundService
         if (!string.IsNullOrWhiteSpace(envUrls))
         {
             return envUrls
-                .Split(new[] { ',', ';', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Split(new[] { '|', ',', ';', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(url => new NewsFeedConfig
                 {
                     Url = url,
