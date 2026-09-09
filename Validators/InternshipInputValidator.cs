@@ -42,5 +42,35 @@ public class InternshipInputValidator : AbstractValidator<InternshipInputModel>
 
         RuleFor(x => x.Scores).NotNull().WithMessage("Puanlama bilgileri zorunludur.");
         RuleFor(x => x.Interview).NotNull().WithMessage("Mülakat bilgileri zorunludur.");
+
+        // Puanlar: kullanıcı hepsini seçmek zorunda, her biri 1-5 aralığında.
+        When(x => x.Scores != null, () =>
+        {
+            RuleFor(x => x.Scores.LearningScore).Cascade(CascadeMode.Stop)
+                .NotNull().InclusiveBetween(1, 5).WithMessage("Öğrenme puanı 1-5 arası seçilmelidir.");
+            RuleFor(x => x.Scores.MentoringScore).Cascade(CascadeMode.Stop)
+                .NotNull().InclusiveBetween(1, 5).WithMessage("Mentorluk puanı 1-5 arası seçilmelidir.");
+            RuleFor(x => x.Scores.TechInfraScore).Cascade(CascadeMode.Stop)
+                .NotNull().InclusiveBetween(1, 5).WithMessage("Teknik altyapı puanı 1-5 arası seçilmelidir.");
+            RuleFor(x => x.Scores.WorkEnvironmentScore).Cascade(CascadeMode.Stop)
+                .NotNull().InclusiveBetween(1, 5).WithMessage("Çalışma ortamı puanı 1-5 arası seçilmelidir.");
+            RuleFor(x => x.Scores.SalaryScore).Cascade(CascadeMode.Stop)
+                .NotNull().InclusiveBetween(1, 5).WithMessage("Maaş puanı 1-5 arası seçilmelidir.");
+            RuleFor(x => x.Scores.WouldRecommend)
+                .NotNull().WithMessage("Tavsiye eder misiniz sorusu yanıtlanmalıdır.");
+            RuleFor(x => x.Scores.AdditionalTips)
+                .MaximumLength(1000).WithMessage("İpuçları en fazla 1000 karakter olabilir.");
+        });
+
+        // Mülakat: başvuru yöntemi seçilmeli, aşama sayısı verilmeli.
+        When(x => x.Interview != null, () =>
+        {
+            RuleFor(x => x.Interview.ApplicationMethod).Cascade(CascadeMode.Stop)
+                .NotNull().IsInEnum().WithMessage("Geçerli bir başvuru yöntemi seçilmelidir.");
+            RuleFor(x => x.Interview.StageCount).Cascade(CascadeMode.Stop)
+                .NotNull().InclusiveBetween(0, 20).WithMessage("Mülakat aşama sayısı 0-20 arası olmalıdır.");
+            RuleFor(x => x.Interview.Description)
+                .MaximumLength(2000).WithMessage("Mülakat açıklaması en fazla 2000 karakter olabilir.");
+        });
     }
 }

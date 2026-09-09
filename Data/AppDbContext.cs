@@ -18,7 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<InternshipAnswer> InternshipAnswers { get; set; }
     public DbSet<City> Cities { get; set; }
     public DbSet<InternshipComment> InternshipComments { get; set; }
-    public DbSet<InternshipReaction> InternshipReactions { get; set; }
+    public DbSet<CommentReaction> CommentReactions { get; set; }
     public DbSet<CommentReport> CommentReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,10 +68,10 @@ public class AppDbContext : DbContext
             b.HasIndex(i => new { i.Status, i.CreatedAt });
         });
 
-        // Bir kullanıcı aynı staja sadece bir reaction verebilir
-        modelBuilder.Entity<InternshipReaction>(b =>
+        // Bir kullanıcı aynı yoruma sadece bir reaction verebilir
+        modelBuilder.Entity<CommentReaction>(b =>
         {
-            b.HasIndex(r => new { r.InternshipId, r.UserId }).IsUnique();
+            b.HasIndex(r => new { r.CommentId, r.UserId }).IsUnique();
         });
 
         // Bir kullanıcı aynı yorumu sadece bir kez şikayet edebilir

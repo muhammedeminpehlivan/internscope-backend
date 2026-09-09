@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InternScope API Test</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --border:#2b303b;
+    --text:#e6e9ef; --muted:#9aa4b2; --accent:#4c8dff; --ok:#3fb950; --err:#f85149; --warn:#d29922;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+  header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--border);padding:12px 16px}
+  h1{font-size:15px;margin:0 0 10px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 0 8px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .grow{flex:1;min-width:180px}
+  input,textarea,select,button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 9px}
+  input:focus,textarea:focus,select:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  textarea{width:100%;font-family:var(--mono);font-size:12.5px;resize:vertical}
+  button{cursor:pointer;background:var(--panel2);white-space:nowrap}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.sm{padding:4px 8px;font-size:12px}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .ep{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)}
+  .ep:last-child{border-bottom:0}
+  .m{font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;min-width:52px;text-align:center}
+  .m.GET{background:#193a2a;color:#4ade80}
+  .m.POST{background:#1e2f4d;color:#7db3ff}
+  .m.PUT{background:#3d3320;color:#f2c661}
+  .m.DELETE{background:#3d2020;color:#ff8c8c}
+  .ep .p{flex:1;font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
+  .ep small{display:block;color:var(--muted);font-size:11px;font-family:system-ui}
+  .status{font-family:var(--mono);font-weight:700}
+  .status.ok{color:var(--ok)} .status.err{color:var(--err)}
+  pre{background:#0b0d11;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;max-height:52vh;font-family:var(--mono);font-size:12.5px;margin:8px 0 0}
+  label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px}
+  .hint{color:var(--muted);font-size:12px}
+  .chip{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;margin:3px 3px 0 0;font-family:var(--mono);font-size:11px;cursor:pointer}
+  .chip:hover{border-color:var(--accent)}
+  .chip b{color:var(--accent)}
+  details{margin-top:6px}summary{cursor:pointer;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>InternScope API Test Konsolu</h1>
+  <div class="row">
+    <input id="base" class="grow" placeholder="API base URL" value="http://localhost:5200">
+    <button class="sm" onclick="save()">Kaydet</button>
+    <button class="sm" onclick="openLogin()">LinkedIn Giriş →</button>
+    <span class="hint">giriş sonrası callback URL'indeki <code>#token=</code> değerini aşağıya yapıştır</span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <textarea id="token" rows="2" class="grow" placeholder="JWT token (Bearer)"></textarea>
+    <button class="sm" onclick="save()">Kaydet</button>
+    <button class="sm" onclick="clearTok()">Temizle</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div>
+    <!-- İSTEK KONSOLU -->
+    <div class="card">
+      <h2 style="margin-top:0">İstek</h2>
+      <div class="row">
+        <select id="method">
+          <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+        </select>
+        <input id="path" class="grow" placeholder="/internship" value="/internship">
+        <button class="primary" onclick="send()">Gönder</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label class="chk"><input type="checkbox" id="rawBody"> gövde düz string (JSON string olarak sarılır)</label>
+      </div>
+      <textarea id="body" rows="8" placeholder='{"key":"value"}  — GET/DELETE için boş bırak' style="margin-top:8px"></textarea>
+
+      <details>
+        <summary>SGK belgesi yükle (multipart)</summary>
+        <div class="row" style="margin-top:8px">
+          <input id="sgkId" class="grow" placeholder="internship id (guid)">
+          <input id="sgkCode" placeholder="doğrulama kodu">
+          <input type="file" id="sgkFile">
+          <button class="sm" onclick="uploadSgk()">Yükle</button>
+        </div>
+      </details>
+
+      <div class="row" style="margin-top:12px;justify-content:space-between">
+        <span id="status" class="status">—</span>
+        <span id="timing" class="hint"></span>
+      </div>
+      <pre id="out">yanıt burada görünecek</pre>
+    </div>
+
+    <!-- ENDPOINT KATALOĞU -->
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-top:0">Endpoint Kataloğu <span class="hint">— satıra tıkla, konsola yüklensin</span></h2>
+      <div id="catalog"></div>
+    </div>
+  </div>
+
+  <!-- YAN PANEL: LOOKUP ID'LERİ -->
+  <div>
+    <div class="card">
+      <h2 style="margin-top:0">Lookup ID'leri</h2>
+      <p class="hint">Staj oluştururken lazım olan GUID'ler. Tıkla → panoya kopyalanır.</p>
+      <button class="sm" onclick="loadLookups()">Getir (üniversite / bölüm / şehir)</button>
+      <div id="lk_uni"></div><div id="lk_dep"></div><div id="lk_city"></div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-top:0">Notlar</h2>
+      <ul class="hint" style="padding-left:18px;margin:0">
+        <li>HTTPS (7134) kullanacaksan önce <code>https://localhost:7134/swagger</code> açıp sertifikayı kabul et.</li>
+        <li>Token <code>localStorage</code>'a kaydediliyor, sekme kapansa da kalır.</li>
+        <li><code>{id}</code>, <code>{iid}</code>, <code>{cid}</code>, <code>{slug}</code> gibi yerleri elle doldur.</li>
+        <li><code>send-verification-email</code> gövdesi düz string — kutucuğu işaretle.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ---- kalıcı ayarlar ----
+function save(){ localStorage.iscope_base=$('base').value.trim(); localStorage.iscope_tok=$('token').value.trim(); flash('kaydedildi'); }
+function clearTok(){ $('token').value=''; localStorage.removeItem('iscope_tok'); }
+(function initHash(){
+  const m = location.hash.match(/token=([^&]+)/);
+  if(m){ $('token').value=decodeURIComponent(m[1]); localStorage.iscope_tok=$('token').value; history.replaceState(null,'',location.pathname); }
+})();
+$('base').value = localStorage.iscope_base || $('base').value;
+$('token').value = localStorage.iscope_tok || '';
+
+function flash(t){ const s=$('timing'); s.textContent=t; setTimeout(()=>{if(s.textContent===t)s.textContent='';},1500); }
+function openLogin(){ window.open($('base').value.trim()+'/auth/login','_blank'); }
+
+// ---- istek gönder ----
+async function send(){
+  const base=$('base').value.trim().replace(/\/$/,'');
+  const method=$('method').value;
+  const path=$('path').value.trim();
+  const raw=$('rawBody').checked;
+  const bodyText=$('body').value.trim();
+  const headers={};
+  if($('token').value.trim()) headers['Authorization']='Bearer '+$('token').value.trim();
+  let body;
+  if(bodyText && method!=='GET'){
+    if(raw){ body=JSON.stringify(bodyText); headers['Content-Type']='application/json'; }
+    else{
+      try{ body=JSON.stringify(JSON.parse(bodyText)); }
+      catch(e){ return show(0,'GÖVDE JSON HATASI: '+e.message,''); }
+      headers['Content-Type']='application/json';
+    }
+  }
+  const t0=performance.now();
+  try{
+    const res=await fetch(base+path,{method,headers,body,redirect:'manual'});
+    const ms=Math.round(performance.now()-t0);
+    let txt=await res.text();
+    try{ txt=JSON.stringify(JSON.parse(txt),null,2); }catch(_){}
+    const code = res.status===0 && res.type==='opaqueredirect' ? '302 (redirect)' : res.status;
+    show(res.status||302, code+' '+res.statusText, txt||'(boş gövde)', ms);
+  }catch(e){
+    show(0,'AĞ HATASI: '+e.message+'  — API ayakta mı? CORS/sertifika?','');
+  }
+}
+function show(code,statusText,text,ms){
+  const s=$('status'); s.textContent=statusText;
+  s.className='status '+(code>=200&&code<400?'ok':'err');
+  $('timing').textContent = ms!=null ? ms+' ms' : '';
+  $('out').textContent=text;
+}
+
+// ---- SGK multipart ----
+async function uploadSgk(){
+  const base=$('base').value.trim().replace(/\/$/,'');
+  const id=$('sgkId').value.trim(); if(!id) return flash('id gir');
+  const fd=new FormData();
+  if($('sgkFile').files[0]) fd.append('file',$('sgkFile').files[0]);
+  fd.append('verificationCode',$('sgkCode').value.trim());
+  const headers={}; if($('token').value.trim()) headers['Authorization']='Bearer '+$('token').value.trim();
+  const t0=performance.now();
+  try{
+    const res=await fetch(`${base}/internship/${id}/sgk`,{method:'POST',headers,body:fd});
+    let txt=await res.text(); try{txt=JSON.stringify(JSON.parse(txt),null,2)}catch(_){}
+    show(res.status,res.status+' '+res.statusText,txt,Math.round(performance.now()-t0));
+  }catch(e){ show(0,'AĞ HATASI: '+e.message,''); }
+}
+
+// ---- lookup id paneli ----
+async function loadLookups(){
+  const base=$('base').value.trim().replace(/\/$/,'');
+  for(const [ep,box,label] of [['/university','lk_uni','Üniversite'],['/department','lk_dep','Bölüm'],['/city','lk_city','Şehir']]){
+    try{
+      const r=await fetch(base+ep); const arr=await r.json();
+      $(box).innerHTML='<h2>'+label+' ('+arr.length+')</h2>'+arr.map(x=>
+        `<span class="chip" onclick="navigator.clipboard.writeText('${x.id}');flash('kopyalandı')"><b>${(x.name||'').slice(0,22)}</b> ${x.id.slice(0,8)}…</span>`).join('');
+    }catch(e){ $(box).innerHTML='<h2>'+label+'</h2><span class="hint">hata: '+e.message+'</span>'; }
+  }
+}
+
+// ---- endpoint kataloğu ----
+const TODAY=new Date().toISOString().slice(0,10);
+const CREATE_BODY={
+  companyName:"Test Teknoloji A.Ş.",
+  universityId:"<uni-guid>", departmentId:"<dep-guid>", cityId:"<city-guid>",
+  companyDepartment:"Yazılım Geliştirme",
+  startDate:"2025-06-16", endDate:"2025-08-16",
+  isAnonymous:false, term:"ShortTerm",
+  stipendMin:15000, stipendMax:22000, currency:"TRY", returnOfferReceived:false,
+  scores:{learningScore:4,mentoringScore:5,techInfraScore:4,workEnvironmentScore:5,salaryScore:3,wouldRecommend:true,additionalTips:"Güzel deneyimdi"},
+  interview:{applicationMethod:"LinkedIn",stageCount:2,description:"1 teknik + 1 HR"}
+};
+const CAT=[
+ ["Auth (anonim)",[
+   ["GET","/auth/login",null,"tarayıcıda aç — LinkedIn OAuth başlatır"],
+ ]],
+ ["Kullanıcı  [Authorize]",[
+   ["GET","/user/me"],
+   ["PUT","/user/profile",{universityId:null,departmentId:null,linkedInProfileUrl:"https://www.linkedin.com/in/ornek"}],
+   ["POST","/user/send-verification-email","ogrenci@universite.edu.tr","gövde DÜZ STRING — kutucuğu işaretle",true],
+   ["GET","/user/verify-email?token={token}",null,"302 → {Frontend}/profile?emailVerified=success|failed"],
+ ]],
+ ["Staj",[
+   ["GET","/internship",null,"onaylı liste (anonim)"],
+   ["GET","/internship/mine",null,"kendi stajlarım — status + rejectionReason burada"],
+   ["POST","/internship",CREATE_BODY,"lookup GUID'lerini yan panelden al"],
+   ["PUT","/internship/{id}",CREATE_BODY,"onaylıysa pending-change, değilse direkt günceller"],
+   ["DELETE","/internship/{id}",null,"kendi stajını sil (ownership kontrollü)"],
+ ]],
+ ["Yorum  (path'te internship id)",[
+   ["GET","/internship/{iid}/comments",null,"anonim okunur"],
+   ["POST","/internship/{iid}/comments",{content:"Çok faydalı bir değerlendirme, teşekkürler."}],
+   ["DELETE","/internship/{iid}/comments/{cid}"],
+   ["POST","/internship/{iid}/comments/{cid}/report"],
+ ]],
+ ["Reaction",[
+   ["GET","/internship/{iid}/reactions"],
+   ["POST","/internship/{iid}/reactions",{isPositive:true},"aynı değere tekrar → toggle/kaldırır"],
+ ]],
+ ["Şirket (anonim)",[
+   ["GET","/company"],
+   ["GET","/company/search?q=te"],
+   ["GET","/company/{slug}"],
+ ]],
+ ["Lookup (anonim)",[
+   ["GET","/university"],["GET","/department"],["GET","/city"],
+ ]],
+ ["İstatistik (anonim)",[
+   ["GET","/statistics/university"],["GET","/statistics/department"],
+   ["GET","/statistics/overall"],["GET","/statistics/application-methods"],
+ ]],
+ ["Admin  [Authorize(Roles=Admin)]",[
+   ["GET","/admin/pending"],
+   ["PUT","/admin/{id}/approve?verifySgk=false"],
+   ["PUT","/admin/{id}/reject",{reason:"Tarih aralığı belirsiz, düzeltip tekrar gönderin."},"gövde opsiyonel"],
+   ["GET","/admin/all?status=Pending","","status: Pending|Approved|Rejected veya boş"],
+   ["DELETE","/admin/{id}"],
+   ["GET","/admin/pending-changes"],
+   ["PUT","/admin/{id}/approve-changes"],
+   ["PUT","/admin/{id}/reject-changes"],
+   ["GET","/admin/reported-comments"],
+   ["DELETE","/admin/comments/{cid}"],
+   ["PUT","/admin/comments/{cid}/dismiss-reports"],
+ ]],
+];
+function buildCatalog(){
+  const c=$('catalog');
+  for(const [group,items] of CAT){
+    const h=document.createElement('h2'); h.textContent=group; c.appendChild(h);
+    for(const [m,p,body,note,raw] of items){
+      const row=document.createElement('div'); row.className='ep';
+      row.innerHTML=`<span class="m ${m}">${m}</span><div class="p">${p}${note?`<small>${note}</small>`:''}</div>`;
+      row.onclick=()=>{
+        $('method').value=m; $('path').value=p;
+        $('rawBody').checked=!!raw;
+        $('body').value = body==null ? '' : (typeof body==='string'? body : JSON.stringify(body,null,2));
+        if(m==='GET'&&p.startsWith('/auth/login')) openLogin();
+        window.scrollTo({top:0,behavior:'smooth'});
+      };
+      c.appendChild(row);
+    }
+  }
+}
+buildCatalog();
+</script>
+</body>
+</html>

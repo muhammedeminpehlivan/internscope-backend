@@ -72,9 +72,9 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("{id}/reject-changes")]
-    public async Task<IActionResult> RejectChanges(Guid id)
+    public async Task<IActionResult> RejectChanges(Guid id, [FromBody] RejectInputModel? input)
     {
-        var result = await _adminService.RejectPendingChangesAsync(id);
+        var result = await _adminService.RejectPendingChangesAsync(id, input?.Reason);
         return result.ToActionResult("Düzenleme reddedildi, eski hali korundu.");
     }
 

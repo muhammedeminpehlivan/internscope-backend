@@ -135,6 +135,7 @@ public class AdminService : IAdminService
 
         internship.HasPendingChanges = false;
         internship.PendingChangesJson = null;
+        internship.ChangeRejectionReason = null; // önceki red gerekçesi varsa temizle
         internship.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
@@ -142,17 +143,20 @@ public class AdminService : IAdminService
         return Result.Success();
     }
 
-    public async Task<Result> RejectPendingChangesAsync(Guid id)
+    public async Task<Result> RejectPendingChangesAsync(Guid id, string? reason)
     {
         var internship = await _context.Internships.FindAsync(id);
         if (internship == null) return Error.NotFound("Staj bulunamadı.");
+        if (!internship.HasPendingChanges) return Error.Validation("Bekleyen değişiklik yok.");
 
+        // Değişikliği çöpe at; staj eski onaylı haliyle yayında kalır.
         internship.HasPendingChanges = false;
         internship.PendingChangesJson = null;
+        internship.ChangeRejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         internship.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Bekleyen değişiklik reddedildi: {InternshipId}", id);
+        _logger.LogInformation("Bekleyen değişiklik reddedildi: {InternshipId} (gerekçe: {HasReason})", id, internship.ChangeRejectionReason != null);
         return Result.Success();
     }
 }

@@ -22,21 +22,23 @@ namespace InternScope.DTOs.Internship
         public Guid CityId { get; set; }
     }
 
+    // Value type alanlar bilerek nullable: "seçilmedi" (null) ile "0 seçildi" ayrışsın.
+    // Zorunluluk + aralık kontrolü InternshipInputValidator'da.
     public class ScoreInputModel
     {
-        public int LearningScore { get; set; }
-        public int MentoringScore { get; set; }
-        public int TechInfraScore { get; set; }
-        public int WorkEnvironmentScore { get; set; }
-        public int SalaryScore { get; set; }
-        public bool WouldRecommend { get; set; }
+        public int? LearningScore { get; set; }
+        public int? MentoringScore { get; set; }
+        public int? TechInfraScore { get; set; }
+        public int? WorkEnvironmentScore { get; set; }
+        public int? SalaryScore { get; set; }
+        public bool? WouldRecommend { get; set; }
         public string? AdditionalTips { get; set; }
     }
 
     public class InterviewInputModel
     {
-        public ApplicationMethod ApplicationMethod { get; set; }
-        public int StageCount { get; set; }
+        public ApplicationMethod? ApplicationMethod { get; set; }
+        public int? StageCount { get; set; }
         public string? Description { get; set; }
     }
 
@@ -54,6 +56,9 @@ namespace InternScope.DTOs.Internship
         public string Status { get; set; } = null!;
         // Sadece reddedilen stajlarda dolu; admin gerekçe yazmadıysa null.
         public string? RejectionReason { get; set; }
+        // Staj onaylıyken yapılan düzenleme reddedilirse dolu. Staj Approved kalır,
+        // kullanıcı "değişikliğin şu sebeple reddedildi" mesajını görür.
+        public string? ChangeRejectionReason { get; set; }
         public string Term { get; set; } = null!;
         public int? StipendMin { get; set; }
         public int? StipendMax { get; set; }

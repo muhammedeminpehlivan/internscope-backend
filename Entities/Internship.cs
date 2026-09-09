@@ -18,6 +18,10 @@ namespace InternScope.Entities
         public string? RejectionReason { get; set; }
         public bool HasPendingChanges { get; set; }
         public string? PendingChangesJson { get; set; }
+        // Onaylı bir stajın düzenlemesi admin tarafından reddedilince girilen gerekçe.
+        // Staj Approved kalır (eski hali yayında); kullanıcı bu mesajı görür.
+        // Yeni bir düzenleme yapılınca veya değişiklik onaylanınca temizlenir.
+        public string? ChangeRejectionReason { get; set; }
         public InternshipTerm Term { get; set; }
         public int? StipendMin { get; set; }
         public int? StipendMax { get; set; }

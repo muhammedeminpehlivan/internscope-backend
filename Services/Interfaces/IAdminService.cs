@@ -12,5 +12,5 @@ public interface IAdminService
     Task<Result> DeleteAsync(Guid id);
     Task<List<PendingChangeReviewModel>> GetPendingChangesAsync();
     Task<Result> ApprovePendingChangesAsync(Guid id);
-    Task<Result> RejectPendingChangesAsync(Guid id);
+    Task<Result> RejectPendingChangesAsync(Guid id, string? reason);
 }

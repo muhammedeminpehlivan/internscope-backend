@@ -40,6 +40,7 @@ public class CommentService : ICommentService
         // Mapping için User navigation'ını yükle
         await _context.Entry(comment).Reference(c => c.User).LoadAsync();
         comment.Reports = [];
+        comment.Reactions = [];
 
         var output = _mapper.Map<CommentOutputModel>(comment);
         output.IsOwn = true;
