@@ -33,6 +33,13 @@ public class CommentController : ApiControllerBase
         return result.ToActionResult();
     }
 
+    [HttpPut("{commentId}")]
+    public async Task<IActionResult> EditComment(Guid internshipId, Guid commentId, [FromBody] CommentInputModel input)
+    {
+        var result = await _commentService.UpdateCommentAsync(GetUserId(), commentId, input.Content);
+        return result.ToActionResult();
+    }
+
     [HttpDelete("{commentId}")]
     public async Task<IActionResult> DeleteComment(Guid internshipId, Guid commentId)
     {
