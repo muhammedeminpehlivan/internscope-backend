@@ -58,6 +58,25 @@ public class CommentService : ICommentService
         return list;
     }
 
+    public async Task<Result<CommentOutputModel>> UpdateCommentAsync(Guid userId, Guid commentId, string content)
+    {
+        var comment = await _context.InternshipComments.FindAsync(commentId);
+        if (comment == null || comment.IsDeleted)
+            return Error.NotFound("Yorum bulunamadı.");
+        if (comment.UserId != userId)
+            return Error.Forbidden("Bu yorumu düzenleme yetkiniz yok.");
+
+        comment.Content = content.Trim();
+        comment.UpdatedAt = DateTime.UtcNow; // IsEdited çıktısı buna göre hesaplanır
+        await _context.SaveChangesAsync();
+
+        // Güncel çıktıyı (reaksiyon sayıları + IsOwn + IsEdited) projeksiyonla döndür
+        return await _context.InternshipComments
+            .Where(c => c.Id == commentId)
+            .ProjectTo<CommentOutputModel>(_mapper.ConfigurationProvider, new { requestingUserId = userId })
+            .FirstAsync();
+    }
+
     public async Task<Result> DeleteCommentAsync(Guid userId, Guid commentId)
     {
         var comment = await _context.InternshipComments.FindAsync(commentId);

@@ -67,6 +67,7 @@ public class MappingProfile : Profile
             .ForMember(d => d.AuthorProfilePictureUrl, o => o.MapFrom(s => s.User.ProfilePictureUrl))
             .ForMember(d => d.AuthorLinkedInProfileUrl, o => o.MapFrom(s => s.User.LinkedInProfileUrl))
             .ForMember(d => d.ReportCount, o => o.MapFrom(s => s.Reports.Count))
+            .ForMember(d => d.IsEdited, o => o.MapFrom(s => s.UpdatedAt != null))
             .ForMember(d => d.Upvotes, o => o.MapFrom(s => s.Reactions.Count(r => r.IsPositive)))
             .ForMember(d => d.Downvotes, o => o.MapFrom(s => s.Reactions.Count(r => !r.IsPositive)))
             .ForMember(d => d.UserReaction, o => o.MapFrom(s => s.Reactions

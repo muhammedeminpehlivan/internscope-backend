@@ -9,6 +9,6 @@ public class CommentInputValidator : AbstractValidator<CommentInputModel>
     {
         RuleFor(x => x.Content)
             .NotEmpty().WithMessage("Yorum boş olamaz.")
-            .MaximumLength(1000).WithMessage("Yorum en fazla 1000 karakter olabilir.");
+            .MaximumLength(500).WithMessage("Yorum en fazla 500 karakter olabilir.");
     }
 }

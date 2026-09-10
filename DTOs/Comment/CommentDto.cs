@@ -14,6 +14,7 @@ namespace InternScope.DTOs.Comment
         public string? AuthorLinkedInProfileUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsOwn { get; set; }
+        public bool IsEdited { get; set; } // yorum düzenlendiyse true → frontend "(düzenlendi)" gösterebilir
         public int ReportCount { get; set; }
         public int Upvotes { get; set; }
         public int Downvotes { get; set; }
