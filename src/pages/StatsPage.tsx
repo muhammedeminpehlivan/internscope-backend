@@ -71,11 +71,11 @@ export default function StatsPage() {
           id: d.id || d.departmentName,
           name: d.departmentName,
         }))
-        const companies = Array.from(
+        const companies: FilterOption[] = Array.from(
           new Set((internships || []).map((i: any) => i.companyName).filter(Boolean))
         ).map((c) => ({
-          id: c,
-          name: c,
+          id: c as string,
+          name: c as string,
         }))
 
         setUniversities(universities)
@@ -295,7 +295,7 @@ export default function StatsPage() {
             </h2>
             <div style={{ height: '400px' }}>
               <ResponsiveBar
-                data={universityStats}
+                data={universityStats as any}
                 keys={['internshipCount']}
                 indexBy="universityName"
                 margin={{ top: 20, right: 30, bottom: 100, left: 60 }}
@@ -324,7 +324,7 @@ export default function StatsPage() {
               </h2>
               <div style={{ height: '350px' }}>
                 <ResponsiveBar
-                  data={departmentStats}
+                  data={departmentStats as any}
                   keys={['averageScore']}
                   indexBy="departmentName"
                   margin={{ top: 20, right: 30, bottom: 100, left: 60 }}
