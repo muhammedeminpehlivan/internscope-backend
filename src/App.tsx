@@ -24,7 +24,7 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/stajin-website">
       <div className="min-h-screen bg-[#050B1A] text-[#F8FAFC] flex flex-col">
         {/* TÜM SİTENİN TEK VE ORTAK NAVBAR'I */}
         <Navbar />
