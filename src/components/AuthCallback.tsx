@@ -26,11 +26,10 @@ export default function AuthCallbackPage() {
       // useAuth hook'unun veya authService'in kullanıcıyı yüklemesini sağlayıp yönlendirin
       authService.getTokenFromCallback(token)
         .then(() => {
-          // State'in ve AuthContext'in token'ı algılaması için tam yönlendirme:
-          window.location.href = '/discover'
+          navigate('/discover', { replace: true })
         })
         .catch(() => {
-          window.location.href = '/discover'
+          navigate('/discover', { replace: true })
         })
     } else {
       navigate('/landing', { replace: true })

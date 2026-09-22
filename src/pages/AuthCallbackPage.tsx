@@ -48,7 +48,7 @@ export default function AuthCallbackPage() {
         }
 
         localStorage.setItem('user', JSON.stringify(userObj))
-        window.location.href = '/discover'
+        navigate('/discover', { replace: true })
       } catch (err) {
         console.error('Token ayrıştırma hatası:', err)
         navigate('/', { replace: true })

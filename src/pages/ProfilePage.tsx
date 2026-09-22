@@ -319,8 +319,8 @@ const handleSendVerificationEmail = async () => {
           <button
             onClick={() => {
               localStorage.clear()
-              window.location.href = '/'
-        
+              window.location.href = import.meta.env.BASE_URL
+
             }}
             className="flex items-center gap-1.5 px-4 py-2 border border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 font-['IBM_Plex_Mono'] text-xs uppercase tracking-wider rounded-full transition-colors"
           >

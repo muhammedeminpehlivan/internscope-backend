@@ -20,7 +20,7 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       localStorage.removeItem('tokenExpiry')
-      window.location.href = '/'
+      window.location.href = import.meta.env.BASE_URL
     }
     return Promise.reject(err)
   }
