@@ -205,15 +205,6 @@ export default function ProfilePage() {
       console.log('Gönderilen payload:', payload)
       const response = await userService.updateProfile(payload)
       console.log('Backend response:', response)
-
-      // Seçilen bölüm/üniversiteyi sessionStorage'a kaydet
-      if (selectedUniversity?.name) {
-        sessionStorage.setItem('userUniversity', selectedUniversity.name)
-      }
-      if (selectedDepartment?.name) {
-        sessionStorage.setItem('userDepartment', selectedDepartment.name)
-      }
-
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {

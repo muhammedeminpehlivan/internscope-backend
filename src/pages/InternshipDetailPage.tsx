@@ -167,6 +167,7 @@ export default function InternshipDetailPage() {
   const [commentError, setCommentError] = useState('')
   const [reactionError, setReactionError] = useState('')
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
+  const [currentProfile, setCurrentProfile] = useState<any>(null)
   const [currentProfilePicture, setCurrentProfilePicture] = useState('')
   const [currentLinkedInProfileUrl, setCurrentLinkedInProfileUrl] = useState('')
   const [activeProfilePreview, setActiveProfilePreview] = useState<string | null>(null)
@@ -194,6 +195,7 @@ export default function InternshipDetailPage() {
       try {
         const profileResponse = await userService.getCurrentUser().catch(() => ({ data: null }))
         const profile = profileResponse.data
+        if (profile) setCurrentProfile(profile)
         if (profile?.profilePictureUrl) setCurrentProfilePicture(profile.profilePictureUrl)
         if (profile?.linkedInProfileUrl) setCurrentLinkedInProfileUrl(profile.linkedInProfileUrl)
         const response = await internshipService.getById(id || '')
@@ -274,8 +276,8 @@ export default function InternshipDetailPage() {
                 || item.user?.profilePictureUrl
                 || (isOwn && currentProfilePicture)
                 || '',
-              universityName: sessionStorage.getItem('userUniversity') || item.universityName || item.user?.universityName || detailData.universityName,
-              departmentName: sessionStorage.getItem('userDepartment') || item.departmentName || item.user?.departmentName || detailData.departmentName,
+              universityName: (isOwn && profile?.universityName) || item.universityName || item.user?.universityName || detailData.universityName,
+              departmentName: (isOwn && profile?.departmentName) || item.departmentName || item.user?.departmentName || detailData.departmentName,
               isOwn,
             }
           })
@@ -344,8 +346,8 @@ export default function InternshipDetailPage() {
         date: item?.createdAt ? formatDate(item.createdAt) : 'Az önce',
         linkedInProfileUrl: item?.linkedInProfileUrl || item?.linkedinProfileUrl || item?.authorLinkedInProfileUrl || item?.linkedInUrl || currentLinkedInProfileUrl,
         profilePictureUrl: item?.profilePictureUrl || item?.authorProfilePictureUrl || item?.author?.profilePictureUrl || currentProfile?.profilePictureUrl || currentProfilePicture,
-        universityName: sessionStorage.getItem('userUniversity') || currentProfile?.universityName || detail?.universityName,
-        departmentName: sessionStorage.getItem('userDepartment') || currentProfile?.departmentName || detail?.departmentName,
+        universityName: currentProfile?.universityName || detail?.universityName,
+        departmentName: currentProfile?.departmentName || detail?.departmentName,
         isOwn: true,
       }, ...current])
       setCommentReactions((current) => ({ ...current, [String(commentId)]: { positiveCount: 0, negativeCount: 0, userReaction: null } }))
@@ -378,8 +380,8 @@ export default function InternshipDetailPage() {
           date: item.createdAt ? formatDate(item.createdAt) : '-',
           linkedInProfileUrl: item.linkedInProfileUrl || item.authorLinkedInProfileUrl || item.user?.linkedInProfileUrl || currentLinkedInProfileUrl || '',
           profilePictureUrl: item.profilePictureUrl || item.authorProfilePictureUrl || item.user?.profilePictureUrl || (isOwn && currentProfilePicture) || '',
-          universityName: sessionStorage.getItem('userUniversity') || item.universityName || item.user?.universityName || detail?.universityName,
-          departmentName: sessionStorage.getItem('userDepartment') || item.departmentName || item.user?.departmentName || detail?.departmentName,
+          universityName: (isOwn && currentProfile?.universityName) || item.universityName || item.user?.universityName || detail?.universityName,
+          departmentName: (isOwn && currentProfile?.departmentName) || item.departmentName || item.user?.departmentName || detail?.departmentName,
           isOwn,
         }
       })
