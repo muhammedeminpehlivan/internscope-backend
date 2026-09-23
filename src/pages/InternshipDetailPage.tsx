@@ -525,7 +525,7 @@ export default function InternshipDetailPage() {
                 <div className="text-[9px] uppercase text-[#c59d3a]">Stajyer Puanı</div>
                 <strong>{internAverage !== null ? internAverage.toFixed(1) : '-'} / 5.0 ★</strong>
               </div>
-              <p className="mt-2 font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">{detail.isSgkVerified ? 'DOĞRULANMIŞ DENEYİM' : 'DENEYİM KAYDI'}</p>
+              <p className="mt-2 font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">DENEYİM KAYDI</p>
             </div>
           </div>
 

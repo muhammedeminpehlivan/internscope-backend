@@ -395,9 +395,7 @@ export default function LandingPage() {
                     <strong className="text-[#f5b923]">{card.internRating !== null && card.internRating !== undefined ? `${card.internRating.toFixed(1)} / 5.0` : '-'} ★</strong>
                   </div>
                   <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#252c38] pt-4">
-                    {card.isVerified ? (
-                      <span className="inline-flex items-center gap-1.5 font-['IBM_Plex_Mono'] text-[10px] font-bold text-[#e0e3e5]"><span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#3d310d] text-[#F59E0B]"><span className="material-symbols-outlined text-[13px]">check</span></span>DOĞRULANMIŞ DENEYİM</span>
-                    ) : <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">DENEYİM KAYDI</span>}
+                    <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">DENEYİM KAYDI</span>
                     <Link to={`/internship/${card.id}`} className="inline-flex items-center gap-1 rounded-lg bg-[#9224dc] px-3 py-2 font-['IBM_Plex_Mono'] text-[10px] font-bold text-white shadow-[0_6px_18px_rgba(146,36,220,0.28)] transition-colors hover:bg-[#a93ff0]">Deneyim Detayı <span className="material-symbols-outlined text-[15px]">arrow_forward</span></Link>
                   </div>
                 </div>

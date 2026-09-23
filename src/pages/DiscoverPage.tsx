@@ -416,26 +416,7 @@ export default function DiscoverPage() {
                     </div>
                   )}
                   <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#252c38] pt-4">
-                    {item.status === 'VERIFIED' && (
-                      <div className="flex items-center gap-1 text-[#e0e3e5]">
-                        <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#3d310d] text-[#F59E0B]">
-                          <span className="material-symbols-outlined text-[13px]">
-                            check
-                          </span>
-                        </span>
-                        <span className="font-['IBM_Plex_Mono'] text-[10px] font-bold tracking-wide">
-                          DOĞRULANMIŞ DENEYİM
-                        </span>
-                      </div>
-                    )}
-                    {item.status === 'PENDING' && (
-                      <div className="flex items-center gap-1 text-[#c6c6cd]">
-                        <span className="material-symbols-outlined text-[16px]">location_on</span>
-                        <span className="font-['IBM_Plex_Mono'] text-[10px] font-bold tracking-wide">
-                          BEKLEMEDE
-                        </span>
-                      </div>
-                    )}
+                    <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">DENEYİM KAYDI</span>
                     {item.status === 'EMPTY' && (
                       <div className="flex items-center gap-1 text-[#c6c6cd]">
                         <span className="material-symbols-outlined text-[16px]">info</span>
