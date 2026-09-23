@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { companyService } from '../services/companyService'
 import { internshipService } from '../services/internshipService'
 import { lookupService } from '../services/lookupService'
@@ -36,7 +36,6 @@ function getResponseItems(response: any) {
 }
 
 export default function InternshipFormPage() {
-  const navigate = useNavigate()
   const { id: internshipId } = useParams<{ id: string }>()
   const isEditing = !!internshipId
 
@@ -55,8 +54,8 @@ export default function InternshipFormPage() {
     cityId: '',
     internshipType: 'uzun',
     grade: '3. Sınıf',
-    startDate: '2024-06-01',
-    endDate: '2024-08-31',
+    startDate: '2026-06-01',
+    endDate: '2026-08-31',
     recommendBasic: 'yes',
     learningScore: '4',
     mentorScore: '4',
@@ -69,11 +68,15 @@ export default function InternshipFormPage() {
     appliedVia: 'LinkedIn',
     interviewProcess: '',
     sgkCode: '',
-    returnOfferReceived: 'no'
+    returnOfferReceived: 'no',
+    isAnonymous: false
   })
 
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(isEditing)
+  const [companyInputValue, setCompanyInputValue] = useState('')
+  const [filteredCompanies, setFilteredCompanies] = useState<any[]>([])
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,7 +136,7 @@ export default function InternshipFormPage() {
               universityId: matchedUniversity?.id || '',
               department: matchedDepartment?.id || '',
               departmentId: matchedDepartment?.id || '',
-              city: matchedCity?.id || '',
+              city: matchedCity?.name || '',
               cityId: matchedCity?.id || '',
               internshipType: data.term === 'ShortTerm' ? 'kisa' : data.term === 'LongTerm' ? 'uzun' : prev.internshipType,
               grade: data.companyDepartment || prev.grade,
@@ -149,6 +152,7 @@ export default function InternshipFormPage() {
               appliedVia: data.interview?.applicationMethod || data.interviewProcess?.applicationMethod || prev.appliedVia,
               interviewProcess: data.interview?.description || data.interviewProcess?.description || prev.interviewProcess,
               returnOfferReceived: data.returnOfferReceived ? 'yes' : 'no',
+              isAnonymous: data.isAnonymous || false,
               experiences: storedNotes.experiences || data.description || data.additionalNotes || prev.experiences,
             }))
           }
@@ -173,7 +177,7 @@ export default function InternshipFormPage() {
         companyDepartment: formData.grade,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        isAnonymous: false,
+        isAnonymous: formData.isAnonymous,
         term: formData.internshipType === 'uzun' ? 'LongTerm' : 'ShortTerm',
         stipendMin: 0,
         stipendMax: 0,
@@ -206,7 +210,7 @@ export default function InternshipFormPage() {
         response = await internshipService.create(payload)
         console.log('Staj başarıyla eklendi:', response.data)
       }
-      navigate('/profile')
+      window.location.href = '/profile'
     } catch (err: any) {
       console.error('Staj ekleme hatası:', err)
       console.error('Error response:', JSON.stringify(err.response?.data, null, 2))
@@ -239,16 +243,52 @@ export default function InternshipFormPage() {
               TEMEL BİLGİLER
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              <div className="relative">
                 <label className="block text-gray-700 font-medium mb-1.5">Şirket</label>
                 <input
                   type="text"
                   required
                   placeholder="Şirket adını yazınız"
                   value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setFormData({ ...formData, companyName: value })
+                    setCompanyInputValue(value)
+
+                    if (value.length >= 2) {
+                      const filtered = companies.filter((c: any) =>
+                        c.name.toLowerCase().includes(value.toLowerCase())
+                      ).slice(0, 5)
+                      setFilteredCompanies(filtered)
+                      setShowCompanyDropdown(filtered.length > 0)
+                    } else {
+                      setShowCompanyDropdown(false)
+                    }
+                  }}
+                  onFocus={() => {
+                    if (formData.companyName.length >= 2 && filteredCompanies.length > 0) {
+                      setShowCompanyDropdown(true)
+                    }
+                  }}
+                  onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 200)}
                   className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
                 />
+                {showCompanyDropdown && filteredCompanies.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 border border-gray-300 border-t-0 bg-white rounded-b shadow-lg z-10">
+                    {filteredCompanies.map((company: any) => (
+                      <div
+                        key={company.id}
+                        onClick={() => {
+                          setFormData({ ...formData, companyName: company.name })
+                          setShowCompanyDropdown(false)
+                        }}
+                        className="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-sm border-b last:border-b-0"
+                      >
+                        {company.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -290,7 +330,10 @@ export default function InternshipFormPage() {
                 <select
                   required
                   value={formData.cityId || formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value, cityId: e.target.value })}
+                  onChange={(e) => {
+                    const selectedCity = cities.find((c: any) => c.id === e.target.value)
+                    setFormData({ ...formData, city: selectedCity?.name || '', cityId: e.target.value })
+                  }}
                   className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
                 >
                   <option value="">Şehir Seç...</option>
@@ -483,6 +526,28 @@ export default function InternshipFormPage() {
                   </label>
                 ))}
               </div>
+            </div>
+          </section>
+
+          {/* Anonimlik Seçeneği */}
+          <section className="border-b border-dashed border-gray-300 pb-8">
+            <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold tracking-wider mb-4 uppercase">
+              <span className="material-symbols-outlined text-[18px]">privacy_tip</span>
+              GIZLILIK
+            </div>
+            <div className="flex items-start gap-4 bg-blue-50 border border-blue-100 rounded-lg p-4">
+              <label className="flex items-center gap-3 cursor-pointer flex-1">
+                <input
+                  type="checkbox"
+                  checked={formData.isAnonymous}
+                  onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
+                  className="w-5 h-5 rounded"
+                />
+                <div>
+                  <span className="block text-gray-700 font-medium">Değerlendirmemi Anonim Olarak Paylaş</span>
+                  <span className="text-xs text-gray-600">Adınız gözükmez, sadece admin tarafından görünür</span>
+                </div>
+              </label>
             </div>
           </section>
 

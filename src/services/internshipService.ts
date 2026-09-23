@@ -6,7 +6,9 @@ export const internshipService = {
   getById: async (id: string) => {
     const response = await apiClient.get('/internship')
     const internships = Array.isArray(response.data) ? response.data : response.data?.items || []
-    return { ...response, data: internships.find((internship: any) => internship.id === id) }
+    const found = internships.find((internship: any) => internship.id === id)
+    console.log(`getById(${id}) found:`, found)
+    return { ...response, data: found }
   },
   create: (data: any) => apiClient.post('/internship', data),
   update: (id: string, data: any) => apiClient.put(`/internship/${id}`, data),

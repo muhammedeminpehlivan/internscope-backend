@@ -61,6 +61,7 @@ interface DetailComment {
   profilePictureUrl?: string
   universityName?: string
   departmentName?: string
+  isOwn?: boolean
 }
 
 interface CommentReaction {
@@ -251,6 +252,7 @@ export default function InternshipDetailPage() {
           console.log('commentItems:', commentItems)
           const mappedComments = commentItems.map((item: any) => {
             const name = item.userName || item.commenterName || item.authorName || item.user?.fullName || item.author?.fullName || 'Anonim Öğrenci'
+            const isOwn = item.userId === user?.id || item.authorName === user?.fullName || item.user?.id === user?.id
             return {
               id: item.id,
               userId: item.userId || item.user?.id || item.author?.id,
@@ -265,14 +267,16 @@ export default function InternshipDetailPage() {
                 || item.author?.linkedInProfileUrl
                 || item.user?.linkedInProfileUrl
                 || item.user?.linkedinUrl
-                || (profile?.fullName === name ? profile?.linkedInProfileUrl : ''),
+                || currentLinkedInProfileUrl,
               profilePictureUrl: item.profilePictureUrl
                 || item.authorProfilePictureUrl
                 || item.author?.profilePictureUrl
                 || item.user?.profilePictureUrl
-                || (profile?.fullName === name ? profile?.profilePictureUrl : ''),
-              universityName: item.universityName || item.user?.universityName || detailData.universityName,
-              departmentName: item.departmentName || item.user?.departmentName || detailData.departmentName,
+                || (isOwn && currentProfilePicture)
+                || '',
+              universityName: sessionStorage.getItem('userUniversity') || item.universityName || item.user?.universityName || detailData.universityName,
+              departmentName: sessionStorage.getItem('userDepartment') || item.departmentName || item.user?.departmentName || detailData.departmentName,
+              isOwn,
             }
           })
           setComments(mappedComments.reverse())
@@ -296,7 +300,7 @@ export default function InternshipDetailPage() {
     }
 
     fetchDetail()
-  }, [id])
+  }, [id, user])
 
   useEffect(() => {
     const profileLinks = document.querySelectorAll<HTMLAnchorElement>('article a[href*="linkedin.com"]')
@@ -318,6 +322,9 @@ export default function InternshipDetailPage() {
     const text = comment.trim()
     if (!text) return
 
+    const profileResponse = await userService.getCurrentUser().catch(() => ({ data: null }))
+    const currentProfile = profileResponse.data
+
     try {
       const response = await internshipService.addComment(id || '', text)
       console.log('Yorum response:', response)
@@ -336,13 +343,47 @@ export default function InternshipDetailPage() {
         text: item?.content || text,
         date: item?.createdAt ? formatDate(item.createdAt) : 'Az önce',
         linkedInProfileUrl: item?.linkedInProfileUrl || item?.linkedinProfileUrl || item?.authorLinkedInProfileUrl || item?.linkedInUrl || currentLinkedInProfileUrl,
-        profilePictureUrl: item?.profilePictureUrl || item?.authorProfilePictureUrl || item?.author?.profilePictureUrl || currentProfilePicture,
-        universityName: item?.universityName || detail?.universityName,
-        departmentName: item?.departmentName || detail?.departmentName,
+        profilePictureUrl: item?.profilePictureUrl || item?.authorProfilePictureUrl || item?.author?.profilePictureUrl || currentProfile?.profilePictureUrl || currentProfilePicture,
+        universityName: sessionStorage.getItem('userUniversity') || currentProfile?.universityName || detail?.universityName,
+        departmentName: sessionStorage.getItem('userDepartment') || currentProfile?.departmentName || detail?.departmentName,
+        isOwn: true,
       }, ...current])
       setCommentReactions((current) => ({ ...current, [String(commentId)]: { positiveCount: 0, negativeCount: 0, userReaction: null } }))
       setComment('')
       setCommentError('')
+      const fetchDetail = async () => {
+        try {
+          const response = await internshipService.getById(id || '')
+          if (response.data) setDetail(response.data)
+        } catch {
+          console.warn('Detail yüklenemedi')
+        }
+      }
+      await fetchDetail()
+      const commentsResponse = await internshipService.getComments(id || '').catch(() => ({ data: null }))
+      const commentItems = Array.isArray(commentsResponse.data)
+        ? commentsResponse.data
+        : Array.isArray(commentsResponse.data?.data)
+          ? commentsResponse.data.data
+          : commentsResponse.data?.items || []
+      const mappedComments = commentItems.map((item: any) => {
+        const name = item.userName || item.commenterName || item.authorName || item.user?.fullName || 'Anonim Öğrenci'
+        const isOwn = item.userId === user?.id || item.authorName === user?.fullName || item.user?.id === user?.id
+        return {
+          id: item.id,
+          userId: item.userId || item.user?.id,
+          name,
+          initials: name.split(' ').map((p: string) => p[0]).join('').slice(0, 2).toUpperCase() || 'AÖ',
+          text: item.content || item.commentText || '',
+          date: item.createdAt ? formatDate(item.createdAt) : '-',
+          linkedInProfileUrl: item.linkedInProfileUrl || item.authorLinkedInProfileUrl || item.user?.linkedInProfileUrl || currentLinkedInProfileUrl || '',
+          profilePictureUrl: item.profilePictureUrl || item.authorProfilePictureUrl || item.user?.profilePictureUrl || (isOwn && currentProfilePicture) || '',
+          universityName: sessionStorage.getItem('userUniversity') || item.universityName || item.user?.universityName || detail?.universityName,
+          departmentName: sessionStorage.getItem('userDepartment') || item.departmentName || item.user?.departmentName || detail?.departmentName,
+          isOwn,
+        }
+      })
+      setComments(mappedComments.reverse())
     } catch (error) {
       console.warn('Yorum gönderilemedi:', error)
       setCommentError('Yorum gönderilemedi. Giriş yaptığınızdan ve hesabınızın doğrulandığından emin olun.')
@@ -529,7 +570,7 @@ export default function InternshipDetailPage() {
             </form>
             {commentError && <p className="mb-4 text-sm text-[#f29aa8]">{commentError}</p>}
             {reactionError && <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-[#f29aa8]">{reactionError}</p>}
-            {comments.length === 0 ? <p className="text-sm text-[#657084]">Henüz yorum yapılmamış. İlk yorumu siz yazın.</p> : <div className="space-y-3">{comments.map((item) => { const reaction = commentReactions[String(item.id)] || { positiveCount: 0, negativeCount: 0 }; const commentUrl = normalizeLinkedInUrl(item.linkedInProfileUrl); const profileHref = commentUrl || '#'; const isPreviewOpen = activeProfilePreview === String(item.id); return <article key={item.id} className="rounded-lg border border-[#252c38] bg-[#151b25] p-4"><div className="mb-2 flex items-center gap-2">{item.profilePictureUrl ? <img className="h-7 w-7 rounded-full object-cover" src={item.profilePictureUrl} alt="" /> : <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2a1740] font-['IBM_Plex_Mono'] text-[10px] text-[#c88cf1]">{item.initials}</span>}<div className="relative"><a href={profileHref} target={commentUrl ? '_blank' : undefined} rel={commentUrl ? 'noreferrer' : undefined} onClick={(event) => { if (!commentUrl) { event.preventDefault(); setActiveProfilePreview(isPreviewOpen ? null : String(item.id)) } }} className="text-sm font-semibold text-[#c88cf1] underline decoration-[#72449b] underline-offset-2 hover:text-white">{item.name}</a><div className={`absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-[#3b2a4d] bg-[#111722] p-3 shadow-[0_12px_30px_rgba(0,0,0,0.4)] transition-all duration-200 ${isPreviewOpen ? 'block opacity-100' : 'hidden opacity-0'}`}><div className="flex items-center gap-2">{item.profilePictureUrl ? <img className="h-9 w-9 rounded-full object-cover" src={item.profilePictureUrl} alt="" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2a1740] text-xs text-[#c88cf1]">{item.initials}</span>}<div className="min-w-0"><p className="truncate text-xs font-semibold text-white">{item.name}</p><p className="text-[10px] text-[#8d96a8]">Staj yorumu</p></div></div>{commentUrl && <a href={commentUrl} target="_blank" rel="noreferrer" className="mt-3 block rounded-lg bg-[#9224dc] px-3 py-2 text-center font-['IBM_Plex_Mono'] text-[10px] font-bold text-white hover:bg-[#a93ff0]">Profile Git</a>}</div></div><span className="text-xs text-[#657084]">{item.date}</span></div><p className="text-sm leading-6 text-[#c6c6cd]">{item.text}</p><div className="mt-3 flex items-center gap-2"><button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), true)} className="inline-flex items-center gap-1 rounded-lg border border-[#315b5b] px-2.5 py-1.5 text-xs text-[#65e0ba] hover:bg-[#1d3c3c] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_up</span>{reaction.positiveCount}</button><button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), false)} className="inline-flex items-center gap-1 rounded-lg border border-[#633b45] px-2.5 py-1.5 text-xs text-[#f29aa8] hover:bg-[#3c2029] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_down</span>{reaction.negativeCount}</button>{user?.id === item.userId && (editingCommentId === item.id ? <><input type="text" value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} className="flex-1 rounded-lg border border-[#303847] bg-[#151b25] px-2 py-1 text-xs text-white outline-none focus:border-[#9224dc]" /><button type="button" onClick={() => handleUpdateComment(String(item.id))} className="rounded-lg bg-[#65e0ba] px-2 py-1 font-['IBM_Plex_Mono'] text-xs font-bold text-[#151b25] hover:bg-[#4dc9a1]">Kaydet</button><button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }} className="rounded-lg border border-[#657084] px-2 py-1 font-['IBM_Plex_Mono'] text-xs text-[#657084] hover:bg-[#252c38]">İptal</button></> : <><button type="button" onClick={() => { setEditingCommentId(String(item.id)); setEditingCommentText(item.text) }} className="rounded-lg border border-[#315b5b] px-2.5 py-1.5 text-xs text-[#65e0ba] hover:bg-[#1d3c3c]"><span className="material-symbols-outlined text-[15px]">edit</span></button><button type="button" disabled={deletingCommentId === String(item.id)} onClick={() => handleDeleteComment(String(item.id))} className="rounded-lg border border-[#633b45] px-2.5 py-1.5 text-xs text-[#f29aa8] hover:bg-[#3c2029] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">delete</span></button></>)}</div></article> })}</div>}
+            {comments.length === 0 ? <p className="text-sm text-[#657084]">Henüz yorum yapılmamış. İlk yorumu siz yazın.</p> : <div className="space-y-3">{comments.map((item) => { const reaction = commentReactions[String(item.id)] || { positiveCount: 0, negativeCount: 0 }; const commentUrl = normalizeLinkedInUrl(item.linkedInProfileUrl); const profileHref = commentUrl || '#'; const isPreviewOpen = activeProfilePreview === String(item.id); return <article key={item.id} className="rounded-lg border border-[#252c38] bg-[#151b25] p-4"><div className="mb-3 flex items-start justify-between"><div className="flex items-center gap-2 flex-1"><div className="shrink-0">{item.profilePictureUrl ? <img className="h-8 w-8 rounded-full object-cover border border-[#303847]" src={item.profilePictureUrl} alt={item.name} /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a1740] font-['IBM_Plex_Mono'] text-[11px] font-semibold text-[#c88cf1] border border-[#3b2a4d]">{item.initials}</span>}</div><div className="relative flex-1 min-w-0"><a href={profileHref} target={commentUrl ? '_blank' : undefined} rel={commentUrl ? 'noreferrer' : undefined} onClick={(event) => { if (!commentUrl) { event.preventDefault(); setActiveProfilePreview(isPreviewOpen ? null : String(item.id)) } }} className="text-sm font-semibold text-[#c88cf1] underline decoration-[#72449b] underline-offset-2 hover:text-white">{item.name}</a><div className={`absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-[#3b2a4d] bg-[#111722] p-3 shadow-[0_12px_30px_rgba(0,0,0,0.4)] transition-all duration-200 ${isPreviewOpen ? 'block opacity-100' : 'hidden opacity-0'}`}><div className="flex items-center gap-2">{item.profilePictureUrl ? <img className="h-9 w-9 rounded-full object-cover" src={item.profilePictureUrl} alt="" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2a1740] text-xs text-[#c88cf1]">{item.initials}</span>}<div className="min-w-0"><p className="truncate text-xs font-semibold text-white">{item.name}</p><p className="text-[10px] text-[#8d96a8]">Staj yorumu</p></div></div>{commentUrl && <a href={commentUrl} target="_blank" rel="noreferrer" className="mt-3 block rounded-lg bg-[#9224dc] px-3 py-2 text-center font-['IBM_Plex_Mono'] text-[10px] font-bold text-white hover:bg-[#a93ff0]">Profile Git</a>}</div><span className="block text-xs text-[#657084] mt-1">{item.date}</span></div></div>{(user?.id === item.userId || item.isOwn) && editingCommentId !== item.id && <div className="flex gap-1"><button type="button" onClick={() => { setEditingCommentId(String(item.id)); setEditingCommentText(item.text) }} className="rounded-lg border border-[#315b5b] px-2.5 py-1.5 text-xs text-[#65e0ba] hover:bg-[#1d3c3c] transition" title="Düzenle"><span className="material-symbols-outlined text-[15px]">edit</span></button><button type="button" disabled={deletingCommentId === String(item.id)} onClick={() => handleDeleteComment(String(item.id))} className="rounded-lg border border-[#633b45] px-2.5 py-1.5 text-xs text-[#f29aa8] hover:bg-[#3c2029] transition disabled:opacity-50" title="Sil"><span className="material-symbols-outlined text-[15px]">delete</span></button></div>}</div>{editingCommentId === String(item.id) && (user?.id === item.userId || item.isOwn) ? <div className="mt-3 flex gap-2"><input type="text" value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} placeholder="Yorumunuzu düzenleyin..." className="flex-1 rounded-lg border border-[#303847] bg-[#151b25] px-3 py-2 text-sm text-white outline-none focus:border-[#9224dc] focus:ring-1 focus:ring-[#9224dc]" /><button type="button" onClick={() => handleUpdateComment(String(item.id))} className="rounded-lg bg-[#65e0ba] px-3 py-2 font-['IBM_Plex_Mono'] text-xs font-bold text-[#151b25] hover:bg-[#4dc9a1] transition">Kaydet</button><button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }} className="rounded-lg border border-[#657084] px-3 py-2 font-['IBM_Plex_Mono'] text-xs text-[#657084] hover:bg-[#252c38] transition">İptal</button></div> : <p className="text-sm leading-6 text-[#c6c6cd]">{item.text}</p>}<div className="mt-3 flex items-center gap-2"><button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), true)} className="inline-flex items-center gap-1 rounded-lg border border-[#315b5b] px-2.5 py-1.5 text-xs text-[#65e0ba] hover:bg-[#1d3c3c] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_up</span>{reaction.positiveCount}</button><button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), false)} className="inline-flex items-center gap-1 rounded-lg border border-[#633b45] px-2.5 py-1.5 text-xs text-[#f29aa8] hover:bg-[#3c2029] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_down</span>{reaction.negativeCount}</button></div></article> })}</div>}
           </div>
         </section>
       </div>

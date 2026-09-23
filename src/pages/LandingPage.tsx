@@ -2,6 +2,7 @@ import { useState, useEffect, Fragment } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { internshipService } from '../services/internshipService'
 import { newsService, type NewsItem } from '../services/newsService'
+import { statsService } from '../services/statsService'
 import { useAuth } from '../hooks/useAuth'
 
 interface FeaturedReview {
@@ -134,6 +135,7 @@ export default function LandingPage() {
   const [reviews, setReviews] = useState<FeaturedReview[]>(fallbackReviews)
   const [featuredArticle, setFeaturedArticle] = useState<NewsItem>(fallbackFeaturedArticle)
   const [sideArticles, setSideArticles] = useState<NewsItem[]>(fallbackSideArticles)
+  const [overallStats, setOverallStats] = useState<any>({ totalCompanies: 0, totalInternships: 0, totalUsers: 0 })
 
   // 2. BACKEND İSTEĞİ (Fallback korumalı)
   useEffect(() => {
@@ -205,6 +207,31 @@ export default function LandingPage() {
     fetchNews()
   }, [])
 
+  // 4. İSTATİSTİKLER
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const allInternships = await internshipService.getAll({ limit: 10000 })
+        const approved = Array.isArray(allInternships.data)
+          ? allInternships.data.filter((i: any) => i.status === 'Approved')
+          : []
+
+        const uniqueCompanies = new Set(Array.isArray(allInternships.data)
+          ? allInternships.data.map((i: any) => i.companyName).filter(Boolean)
+          : [])
+
+        setOverallStats({
+          totalCompanies: uniqueCompanies.size || 0,
+          totalInternships: approved.length || 0,
+          totalUsers: 0,
+        })
+      } catch (err) {
+        console.warn('İstatistikler API bağlantısı kurulamadı, mock veri gösteriliyor:', err)
+      }
+    }
+    fetchStats()
+  }, [])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -252,7 +279,7 @@ export default function LandingPage() {
 
             {/* Alt Başlık */}
             <p className="text-base sm:text-lg text-[#c6c6cd] max-w-2xl mb-12 opacity-80 leading-relaxed">
-              Kurumsal kariyer geçmişinin ve akademik liyakatin dijital mahzeni. Doğrulanmış öğrenci deneyimleriyle, prestijli kayıtların güvenli adresi.
+              Ekip, iş yükü, öğrenme fırsatları... Stajyerlerin gözünden şirketleri keşfet.
             </p>
 
             {/* Arama Barı */}
@@ -264,14 +291,14 @@ export default function LandingPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Şirket, pozisyon veya sektör ara..."
+                  placeholder="Şirketleri keşfet..."
                   className="w-full bg-transparent border-none text-[#e0e3e5] text-base placeholder-[#909097] focus:outline-none focus:ring-0 py-3"
                 />
                 <button
                   type="submit"
                   className="bg-[#700080] hover:bg-[#7c158b] text-[#F8FAFC] font-['IBM_Plex_Mono'] text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition-colors flex items-center gap-2 shrink-0 font-medium"
                 >
-                  <span>Sorgula</span>
+                  <span>Ara</span>
                   <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
               </div>
@@ -285,18 +312,13 @@ export default function LandingPage() {
 
             <div className="mt-4 flex flex-wrap justify-center items-center gap-8 md:gap-16">
               <div className="flex flex-col items-center">
-                <span className="font-['IBM_Plex_Mono'] text-2xl font-bold text-[#e0e3e5]">4,521</span>
-                <span className="font-['IBM_Plex_Mono'] text-xs text-[#45464c] uppercase tracking-wider mt-1">Doğrulanmış Kayıt</span>
+                <span className="font-['IBM_Plex_Mono'] text-2xl font-bold text-[#e0e3e5]">{overallStats.totalInternships.toLocaleString('tr-TR')}</span>
+                <span className="font-['IBM_Plex_Mono'] text-xs text-[#45464c] uppercase tracking-wider mt-1">Değerlendirme</span>
               </div>
               <div className="hidden md:block w-px h-12 bg-[#1E293B]"></div>
               <div className="flex flex-col items-center">
-                <span className="font-['IBM_Plex_Mono'] text-2xl font-bold text-[#e0e3e5]">1,204</span>
-                <span className="font-['IBM_Plex_Mono'] text-xs text-[#45464c] uppercase tracking-wider mt-1">Kurum Endeksi</span>
-              </div>
-              <div className="hidden md:block w-px h-12 bg-[#1E293B]"></div>
-              <div className="flex flex-col items-center">
-                <span className="font-['IBM_Plex_Mono'] text-2xl font-bold text-[#e0e3e5]">18,940</span>
-                <span className="font-['IBM_Plex_Mono'] text-xs text-[#45464c] uppercase tracking-wider mt-1">Aktif Akademik Üye</span>
+                <span className="font-['IBM_Plex_Mono'] text-2xl font-bold text-[#e0e3e5]">{overallStats.totalCompanies.toLocaleString('tr-TR')}</span>
+                <span className="font-['IBM_Plex_Mono'] text-xs text-[#45464c] uppercase tracking-wider mt-1">Toplam Firma</span>
               </div>
             </div>
           </div>

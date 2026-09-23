@@ -48,7 +48,7 @@ interface InternshipChange {
 
 interface PendingInternship extends InternshipChange {}
 
-function normalizeChanges(changes: any[], universities: any[], departments: any[]): InternshipChange[] {
+function normalizeChanges(changes: any[], universities: any[], departments: any[], cities: any[] = []): InternshipChange[] {
   return changes.map((item) => {
     const current = item.current || item.original || item.internship || item
     const proposed = item.proposed || item.proposedChanges || {}
@@ -57,6 +57,8 @@ function normalizeChanges(changes: any[], universities: any[], departments: any[
     const classChanged = currentClass !== undefined && proposedClass !== undefined && String(currentClass).trim() !== String(proposedClass).trim()
     const university = universities.find((entry) => entry.id === proposed.universityId)
     const department = departments.find((entry) => entry.id === proposed.departmentId)
+    const city = cities.find((entry) => entry.id === current.cityId)
+    console.log('normalizeChanges: cityId=', current.cityId, 'cities.length=', cities.length, 'city=', city)
 
     return {
       ...item,
@@ -65,6 +67,9 @@ function normalizeChanges(changes: any[], universities: any[], departments: any[
         ...current,
         companyDepartment: currentClass,
         term: normalizeTerm(current.term || current.internshipType),
+        startDate: current.startDate ? current.startDate.split('T')[0] : current.startDate,
+        endDate: current.endDate ? current.endDate.split('T')[0] : current.endDate,
+        cityName: city?.name || current.cityName || current.city || '-',
       },
       proposed: {
         ...proposed,
@@ -72,6 +77,8 @@ function normalizeChanges(changes: any[], universities: any[], departments: any[
         term: normalizeTerm(proposed.term || proposed.internshipType),
         universityName: proposed.universityName || university?.name,
         departmentName: proposed.departmentName || department?.name,
+        startDate: proposed.startDate ? proposed.startDate.split('T')[0] : proposed.startDate,
+        endDate: proposed.endDate ? proposed.endDate.split('T')[0] : proposed.endDate,
       },
     }
   })
@@ -148,17 +155,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchPending = async () => {
       try {
-        const [pendingRes, changesRes, universitiesRes, departmentsRes, allRes] = await Promise.allSettled([
+        const [pendingRes, changesRes, universitiesRes, departmentsRes, citiesRes, allRes] = await Promise.allSettled([
           adminService.getPendingInternships(),
           apiClient.get('/admin/pending-changes'),
           lookupService.getUniversities(),
           lookupService.getDepartments(),
+          lookupService.getCities(),
           adminService.getAllInternships(),
         ])
         const pendingData = pendingRes.status === 'fulfilled' ? getResponseItems(pendingRes.value) : []
         const changesData = changesRes.status === 'fulfilled' ? getResponseItems(changesRes.value) : []
         const universities = universitiesRes.status === 'fulfilled' ? getResponseItems(universitiesRes.value) : []
         const departments = departmentsRes.status === 'fulfilled' ? getResponseItems(departmentsRes.value) : []
+        const cities = citiesRes.status === 'fulfilled' ? getResponseItems(citiesRes.value) : []
         const allInternships = allRes.status === 'fulfilled' ? getResponseItems(allRes.value) : []
         setApprovedCount(allInternships.filter((item: any) => item.status?.toLowerCase() === 'approved').length)
         setRejectedCount(allInternships.filter((item: any) => item.status?.toLowerCase() === 'rejected').length)
@@ -168,7 +177,7 @@ export default function AdminDashboard() {
           proposed: {}
         }))
         // Changes: güncellenmiş stajlar (proposed boş olmayan)
-        const changesItems = normalizeChanges(changesData.filter(hasProposedChanges), universities, departments)
+        const changesItems = normalizeChanges(changesData.filter(hasProposedChanges), universities, departments, cities)
         const allPending = mergePendingItems(pendingItems, changesItems)
         if (allPending.length > 0) setItems(allPending)
       } catch (err: any) {
@@ -181,17 +190,19 @@ export default function AdminDashboard() {
 
   const refetchPending = async () => {
     try {
-      const [pendingRes, changesRes, universitiesRes, departmentsRes, allRes] = await Promise.allSettled([
+      const [pendingRes, changesRes, universitiesRes, departmentsRes, citiesRes, allRes] = await Promise.allSettled([
         adminService.getPendingInternships(),
         apiClient.get('/admin/pending-changes'),
         lookupService.getUniversities(),
         lookupService.getDepartments(),
+        lookupService.getCities(),
         adminService.getAllInternships(),
       ])
       const pendingData = pendingRes.status === 'fulfilled' ? getResponseItems(pendingRes.value) : []
       const changesData = changesRes.status === 'fulfilled' ? getResponseItems(changesRes.value) : []
       const universities = universitiesRes.status === 'fulfilled' ? getResponseItems(universitiesRes.value) : []
       const departments = departmentsRes.status === 'fulfilled' ? getResponseItems(departmentsRes.value) : []
+      const cities = citiesRes.status === 'fulfilled' ? getResponseItems(citiesRes.value) : []
       const allInternships = allRes.status === 'fulfilled' ? getResponseItems(allRes.value) : []
       setApprovedCount(allInternships.filter((item: any) => item.status?.toLowerCase() === 'approved').length)
       setRejectedCount(allInternships.filter((item: any) => item.status?.toLowerCase() === 'rejected').length)
@@ -201,7 +212,7 @@ export default function AdminDashboard() {
         proposed: {}
       }))
       // Changes: güncellenmiş stajlar (proposed boş olmayan)
-      const changesItems = normalizeChanges(changesData.filter(hasProposedChanges), universities, departments)
+      const changesItems = normalizeChanges(changesData.filter(hasProposedChanges), universities, departments, cities)
       const allPending = mergePendingItems(pendingItems, changesItems)
       if (allPending.length > 0) setItems(allPending)
       else setItems([])

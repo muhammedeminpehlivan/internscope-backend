@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import apiClient from '../services/apiClient'
 import { Internship } from '../domain/types'
 import { userService } from '../services/userService'
 import { internshipService } from '../services/internshipService'
 import { lookupService } from '../services/lookupService'
-import apiClient from '../services/apiClient'
 
 interface ProfileInternshipCard extends Internship {
   companyName: string
@@ -88,11 +88,12 @@ export default function ProfilePage() {
 
     const fetchUserData = async () => {
       try {
-        const [res, universitiesRes, departmentsRes] = await Promise.all([
-          userService.getCurrentUser(),
-          lookupService.getUniversities(),
-          lookupService.getDepartments(),
-        ])
+        // Önce universities ve departments fetch et
+        const universitiesRes = await lookupService.getUniversities()
+        const departmentsRes = await lookupService.getDepartments()
+
+        // Sonra getCurrentUser() çağır (universities ready olacak)
+        const res = await userService.getCurrentUser()
         setUniversities(universitiesRes.data || [])
         setDepartments(departmentsRes.data || [])
         console.log('getCurrentUser response:', res.data)
@@ -100,17 +101,11 @@ export default function ProfilePage() {
           if (res.data.fullName) setFullName(res.data.fullName)
           if (res.data.profilePictureUrl) setProfilePictureUrl(res.data.profilePictureUrl)
           if (res.data.linkedInProfileUrl) setLinkedInProfileUrl(res.data.linkedInProfileUrl)
-          if (res.data.universityName || res.data.universityId) {
-            const uniName = res.data.universityName
-            const matchedUni = (universitiesRes.data || []).find((u: any) => u.name === uniName)
-            if (matchedUni) setUniversity(matchedUni.id)
-            else if (res.data.universityId) setUniversity(res.data.universityId)
+          if (res.data.universityId) {
+            setUniversity(res.data.universityId)
           }
-          if (res.data.departmentName || res.data.departmentId) {
-            const deptName = res.data.departmentName
-            const matchedDept = (departmentsRes.data || []).find((d: any) => d.name === deptName)
-            if (matchedDept) setDepartment(matchedDept.id)
-            else if (res.data.departmentId) setDepartment(res.data.departmentId)
+          if (res.data.departmentId) {
+            setDepartment(res.data.departmentId)
           }
           if (res.data.isEmailVerified !== undefined) setIsVerified(res.data.isEmailVerified)
 
@@ -148,6 +143,7 @@ export default function ProfilePage() {
             // Pending-changes'te güncel versiyonu varsa onu kullan
             const proposed = pendingChanges[item.id]
             const dataToUse = proposed ? { ...item, ...proposed } : item
+            console.log('Backend internship data:', dataToUse)
             const status = normalizeInternshipStatus(item.status)
             const displayStatus: Internship['status'] = status === 'Rejected' ? 'Rejected' : proposed ? 'Pending' : status
             const rejectionReason = dataToUse.rejectionReason
@@ -156,6 +152,10 @@ export default function ProfilePage() {
               || dataToUse.reason
               || dataToUse.rejection?.reason
               || dataToUse.rejection?.message
+
+            const dateRangeStr = dataToUse.startDate && dataToUse.endDate
+              ? `${new Date(dataToUse.startDate).toLocaleDateString('tr-TR')} - ${new Date(dataToUse.endDate).toLocaleDateString('tr-TR')}`
+              : 'Tarih belirtilmedi'
 
             return {
               id: dataToUse.id,
@@ -172,7 +172,7 @@ export default function ProfilePage() {
               companyName: dataToUse.companyName || 'Şirket',
               companyInitials: (dataToUse.companyName || 'Ş')[0]?.toUpperCase() || 'Ş',
               role: dataToUse.companyDepartment || 'Pozisyon Belirtilmedi',
-              dateRange: `${new Date(dataToUse.startDate).toLocaleDateString('tr-TR')} - ${new Date(dataToUse.endDate).toLocaleDateString('tr-TR')}`,
+              dateRange: dateRangeStr,
               workDays: calculateDuration(dataToUse.startDate, dataToUse.endDate),
               rejectReason: rejectionReason,
             }
@@ -198,21 +198,22 @@ export default function ProfilePage() {
     try {
       const selectedUniversity = universities.find((item: any) => item.name === university || item.id === university)
       const selectedDepartment = departments.find((item: any) => item.name === department || item.id === department)
-      const payload = {
-        universityId: selectedUniversity?.id,
-        departmentId: selectedDepartment?.id,
-        linkedInProfileUrl: linkedInProfileUrl.trim(),
-      }
+      const payload: any = {}
+      if (university) payload.universityId = selectedUniversity?.id || university
+      if (department) payload.departmentId = selectedDepartment?.id || department
+      if (linkedInProfileUrl.trim()) payload.linkedInProfileUrl = linkedInProfileUrl.trim()
       console.log('Gönderilen payload:', payload)
       const response = await userService.updateProfile(payload)
       console.log('Backend response:', response)
-      // State'i response'tan gelen veriler ile güncelle
-      if (response.data?.universityId) {
-        setUniversity(response.data.universityId)
+
+      // Seçilen bölüm/üniversiteyi sessionStorage'a kaydet
+      if (selectedUniversity?.name) {
+        sessionStorage.setItem('userUniversity', selectedUniversity.name)
       }
-      if (response.data?.departmentId) {
-        setDepartment(response.data.departmentId)
+      if (selectedDepartment?.name) {
+        sessionStorage.setItem('userDepartment', selectedDepartment.name)
       }
+
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
@@ -308,7 +309,7 @@ const handleSendVerificationEmail = async () => {
                 </span>
                 <span className="text-[#c6c6cd]">
                   {university && department
-                    ? `${university}, ${department}`
+                    ? `${universities.find((u: any) => u.id === university)?.name || university}, ${departments.find((d: any) => d.id === department)?.name || department}`
                     : 'Öğrenim bilgileri henüz girilmedi'}
                 </span>
               </div>
@@ -317,10 +318,14 @@ const handleSendVerificationEmail = async () => {
 
           {/* Profil Sayfası Çıkış Yap Butonu */}
           <button
-            onClick={() => {
+            onClick={async () => {
               localStorage.clear()
+              try {
+                await apiClient.post('/auth/logout').catch(() => {})
+              } catch (err) {
+                console.warn('Logout endpoint hatası:', err)
+              }
               window.location.href = import.meta.env.BASE_URL
-
             }}
             className="flex items-center gap-1.5 px-4 py-2 border border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 font-['IBM_Plex_Mono'] text-xs uppercase tracking-wider rounded-full transition-colors"
           >
@@ -400,13 +405,19 @@ const handleSendVerificationEmail = async () => {
                     Üniversite
                   </label>
                   <select
-                    value={university}
-                    onChange={(e) => setUniversity(e.target.value)}
+                    value={university || ''}
+                    onChange={(e) => {
+                      setUniversity(e.target.value)
+                      setTimeout(() => {
+                        setIsSaving(true)
+                        handleSaveProfile()
+                      }, 100)
+                    }}
                     className="h-10 px-3 bg-[#272a2c] border border-[#45464c] rounded text-sm text-white appearance-none focus:outline-none focus:border-[#F59E0B] transition-colors cursor-pointer"
                   >
                     <option value="">Üniversite Seç...</option>
                     {universities.map((item: any) => (
-                      <option key={item.id} value={item.name}>
+                      <option key={item.id} value={item.id}>
                         {item.name}
                       </option>
                     ))}
@@ -419,13 +430,19 @@ const handleSendVerificationEmail = async () => {
                     Bölüm
                   </label>
                   <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
+                    value={department || ''}
+                    onChange={(e) => {
+                      setDepartment(e.target.value)
+                      setTimeout(() => {
+                        setIsSaving(true)
+                        handleSaveProfile()
+                      }, 100)
+                    }}
                     className="h-10 px-3 bg-[#272a2c] border border-[#45464c] rounded text-sm text-white appearance-none focus:outline-none focus:border-[#F59E0B] transition-colors cursor-pointer"
                   >
                     <option value="">Bölüm Seç...</option>
                     {departments.map((item: any) => (
-                      <option key={item.id} value={item.name}>
+                      <option key={item.id} value={item.id}>
                         {item.name}
                       </option>
                     ))}

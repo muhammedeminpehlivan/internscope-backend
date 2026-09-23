@@ -298,14 +298,18 @@ export default function StatsPage() {
                 data={universityStats as any}
                 keys={['internshipCount']}
                 indexBy="universityName"
-                margin={{ top: 20, right: 30, bottom: 100, left: 60 }}
+                margin={{ top: 20, right: 30, bottom: 150, left: 60 }}
                 padding={0.3}
                 colors={['#700080']}
                 animate={true}
                 motionConfig="molasses"
+                axisBottom={{
+                  tickRotation: -45,
+                  tickPadding: 5,
+                }}
                 theme={{
                   axis: {
-                    ticks: { line: { stroke: '#252c38' }, text: { fill: '#e0e3e5', fontSize: 12 } },
+                    ticks: { line: { stroke: '#252c38' }, text: { fill: '#e0e3e5', fontSize: 11 } },
                     legend: { text: { fill: '#e0e3e5', fontSize: 14 } },
                   },
                   grid: { line: { stroke: '#252c38' } },
@@ -327,14 +331,18 @@ export default function StatsPage() {
                   data={departmentStats as any}
                   keys={['averageScore']}
                   indexBy="departmentName"
-                  margin={{ top: 20, right: 30, bottom: 100, left: 60 }}
+                  margin={{ top: 20, right: 30, bottom: 150, left: 60 }}
                   padding={0.3}
                   colors={['#456552']}
                   animate={true}
                   motionConfig="molasses"
+                  axisBottom={{
+                    tickRotation: -45,
+                    tickPadding: 5,
+                  }}
                   theme={{
                     axis: {
-                      ticks: { line: { stroke: '#252c38' }, text: { fill: '#e0e3e5', fontSize: 12 } },
+                      ticks: { line: { stroke: '#252c38' }, text: { fill: '#e0e3e5', fontSize: 11 } },
                       legend: { text: { fill: '#e0e3e5', fontSize: 14 } },
                     },
                     grid: { line: { stroke: '#252c38' } },
@@ -354,33 +362,34 @@ export default function StatsPage() {
                 <ResponsivePie
                   data={departmentStats.filter((d) => d.internshipCount).map((d) => ({
                     id: d.departmentName,
-                    label: d.departmentName,
+                    label: d.departmentName.length > 20 ? d.departmentName.slice(0, 17) + '...' : d.departmentName,
                     value: d.internshipCount || 0,
                   }))}
-                  margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+                  margin={{ top: 40, right: 120, bottom: 40, left: 120 }}
                   innerRadius={0.5}
                   padAngle={0.7}
                   cornerRadius={3}
                   colors={['#700080', '#F59E0B', '#456552', '#1E293B', '#050B1A']}
-                  arcLabel={(d) => `${d.label} (${d.value})`}
+                  arcLabel={(d) => `${d.value}`}
+                  arcLabelTextColor="#e0e3e5"
                   animate={true}
                   motionConfig="molasses"
                   theme={{
-                    labels: { text: { fill: '#e0e3e5' } },
-                    legends: { text: { fill: '#909097' } },
+                    labels: { text: { fill: '#e0e3e5', fontSize: 12 } },
+                    legends: { text: { fill: '#909097', fontSize: 11 } },
                   }}
                   legends={[
                     {
-                      anchor: 'bottom',
-                      direction: 'row',
+                      anchor: 'right',
+                      direction: 'column',
                       justify: false,
-                      translateX: 0,
-                      translateY: 56,
-                      itemsSpacing: 10,
+                      translateX: 100,
+                      translateY: 0,
+                      itemsSpacing: 12,
                       itemWidth: 100,
                       itemHeight: 18,
                       itemTextColor: '#909097',
-                      symbolSize: 18,
+                      symbolSize: 12,
                     },
                   ]}
                 />
