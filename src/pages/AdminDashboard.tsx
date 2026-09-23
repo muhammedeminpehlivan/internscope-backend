@@ -114,7 +114,7 @@ function valuesEqual(first: unknown, second: unknown) {
   if (typeof first === 'string' && typeof second === 'string') {
     return first.trim().split('T')[0] === second.trim().split('T')[0]
   }
-  if (typeof first === 'object' && typeof second === 'object') {
+  if (first !== null && second !== null && typeof first === 'object' && typeof second === 'object') {
     const firstObject = first as Record<string, unknown>
     const secondObject = second as Record<string, unknown>
     const keys = new Set([...Object.keys(firstObject), ...Object.keys(secondObject)])
