@@ -1,4 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 import { statsService } from '../services/statsService'
 import { internshipService } from '../services/internshipService'
 import { ResponsiveBar } from '@nivo/bar'
@@ -29,6 +31,8 @@ interface FilterOption {
 }
 
 export default function StatsPage() {
+  const { isAuth } = useAuth()
+  const [needsAuth, setNeedsAuth] = useState(!isAuth)
   const [universityStats, setUniversityStats] = useState<UniversityStats[]>([])
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([])
   const [overallStats, setOverallStats] = useState<OverallStats | null>(null)
@@ -197,6 +201,20 @@ export default function StatsPage() {
 
   return (
     <main className="min-h-screen bg-[#101415] text-[#e0e3e5] py-16 px-4">
+      {needsAuth && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1d2022] border-l-4 border-[#700080] rounded-lg p-8 max-w-md text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Giriş Yapmanız Gerekiyor</h2>
+            <p className="text-[#c6c6cd] mb-6">İstatistikleri görmek için lütfen giriş yapınız.</p>
+            <Link
+              to="/"
+              className="inline-block px-8 py-3 bg-[#700080] hover:bg-[#9224dc] text-white rounded-lg transition-colors font-bold"
+            >
+              Ana Sayfaya Dön
+            </Link>
+          </div>
+        </div>
+      )}
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-12">
           <h1 className="font-['Newsreader'] text-4xl font-bold text-[#e0e3e5] mb-2">

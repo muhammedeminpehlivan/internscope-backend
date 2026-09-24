@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { internshipService } from '../services/internshipService'
 import { userService } from '../services/userService'
 import { useAuth } from '../hooks/useAuth'
@@ -171,6 +171,7 @@ export default function InternshipDetailPage() {
   const [currentProfilePicture, setCurrentProfilePicture] = useState('')
   const [currentLinkedInProfileUrl, setCurrentLinkedInProfileUrl] = useState('')
   const [activeProfilePreview, setActiveProfilePreview] = useState<string | null>(null)
+  const [needsAuth, setNeedsAuth] = useState(false)
 
   const readCommentReactions = (data: any): CommentReaction => {
     if (Array.isArray(data)) {
@@ -193,11 +194,18 @@ export default function InternshipDetailPage() {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const profileResponse = await userService.getCurrentUser().catch(() => ({ data: null }))
-        const profile = profileResponse.data
-        if (profile) setCurrentProfile(profile)
-        if (profile?.profilePictureUrl) setCurrentProfilePicture(profile.profilePictureUrl)
-        if (profile?.linkedInProfileUrl) setCurrentLinkedInProfileUrl(profile.linkedInProfileUrl)
+        let profile: any = null
+        try {
+          const profileResponse = await userService.getCurrentUser()
+          profile = profileResponse.data
+          if (profile) setCurrentProfile(profile)
+          if (profile?.profilePictureUrl) setCurrentProfilePicture(profile.profilePictureUrl)
+          if (profile?.linkedInProfileUrl) setCurrentLinkedInProfileUrl(profile.linkedInProfileUrl)
+        } catch (err: any) {
+          if (err?.response?.status === 401) {
+            setNeedsAuth(true)
+          }
+        }
         const response = await internshipService.getById(id || '')
         if (!response.data) throw new Error('Staj kaydı bulunamadı')
         let detailData = response.data as InternshipDetail & { user?: any; author?: any }
@@ -480,6 +488,20 @@ export default function InternshipDetailPage() {
 
   return (
     <main className="min-h-screen bg-[#101415] px-4 py-8 text-[#e0e3e5] font-['Inter']">
+      {needsAuth && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1d2022] border-l-4 border-[#700080] rounded-lg p-8 max-w-md text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Giriş Yapmanız Gerekiyor</h2>
+            <p className="text-[#c6c6cd] mb-6">Tüm detayları görmek için lütfen giriş yapınız.</p>
+            <Link
+              to="/"
+              className="inline-block px-8 py-3 bg-[#700080] hover:bg-[#9224dc] text-white rounded-lg transition-colors font-bold"
+            >
+              Ana Sayfaya Dön
+            </Link>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-[1060px]">
         <button type="button" onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-2 font-['IBM_Plex_Mono'] text-xs text-[#a982b4] hover:text-white">
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
