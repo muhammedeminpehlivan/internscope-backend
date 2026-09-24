@@ -15,6 +15,15 @@ StajIn, öğrencilerin staj deneyimlerini değerlendirebildiği, kurumsal arşiv
 
 ---
 
+
+<img width="1600" height="769" alt="Image" src="https://github.com/user-attachments/assets/ae7b0af3-6948-4db1-a9ea-6408a0fa317f" />
+
+<img width="1505" height="717" alt="Image" src="https://github.com/user-attachments/assets/c68c2869-9190-4f5e-889d-8a0267e08330" />
+
+<img width="1322" height="832" alt="Image" src="https://github.com/user-attachments/assets/d37e5247-9f41-47ac-b8d7-f86ba8b3a95a" />
+
+<img width="666" height="577" alt="Image" src="https://github.com/user-attachments/assets/96d8245b-a9e0-4fda-b6c9-5cb22a40e269" />
+
 ## Hızlı Başlangıç
 
 ### Gereksinimler
