@@ -15,18 +15,16 @@ StajIn, öğrencilerin staj deneyimlerini değerlendirebildiği, kurumsal arşiv
 
 ---
 
+<img width="1600" height="769" alt="Image" src="https://github.com/user-attachments/assets/a33f6068-1541-401b-98b9-bf0ce7d0ae13" />
+<img width="1368" height="818" alt="Image" src="https://github.com/user-attachments/assets/4e271238-349d-41e7-b685-fa4d9befbe14" />
+<img width="1322" height="832" alt="Image" src="https://github.com/user-attachments/assets/22288ffd-6df3-463c-a62e-da1df236da3b" />
+<img width="1137" height="437" alt="Image" src="https://github.com/user-attachments/assets/2c250c14-3d34-4e41-95b1-11ffad8f4a5b" />
+<img width="666" height="577" alt="Image" src="https://github.com/user-attachments/assets/c6318671-e67d-48bf-996d-ddfb564cfcbe" />
+<img width="1252" height="801" alt="Image" src="https://github.com/user-attachments/assets/24b99097-839e-4999-90ed-562a8a8f235b" />
+<img width="1030" height="706" alt="Image" src="https://github.com/user-attachments/assets/a74d94f9-4678-4448-bdef-f789efc927bb" />
+<img width="1288" height="462" alt="Image" src="https://github.com/user-attachments/assets/a101d892-6ecf-4e24-ae94-7967902271a9" />
+<img width="1505" height="717" alt="Image" src="https://github.com/user-attachments/assets/8d567fda-bba0-4ed5-a075-fe9c5646efa6" />
 
-<img width="1600" height="769" alt="Image" src="https://github.com/user-attachments/assets/ae7b0af3-6948-4db1-a9ea-6408a0fa317f" />
-
-<img width="1505" height="717" alt="Image" src="https://github.com/user-attachments/assets/c68c2869-9190-4f5e-889d-8a0267e08330" />
-
-<img width="1322" height="832" alt="Image" src="https://github.com/user-attachments/assets/d37e5247-9f41-47ac-b8d7-f86ba8b3a95a" />
-
-<img width="666" height="577" alt="Image" src="https://github.com/user-attachments/assets/96d8245b-a9e0-4fda-b6c9-5cb22a40e269" />
-
-<img width="1252" height="801" alt="Image" src="https://github.com/user-attachments/assets/d1565528-1a14-4f73-8919-11463524b7d8" />
-
-<img width="1288" height="462" alt="Image" src="https://github.com/user-attachments/assets/7a7e0bac-a1ba-48a1-ada7-4d240625d950" />
 
 ## Hızlı Başlangıç
 
