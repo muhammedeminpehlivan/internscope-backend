@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>InternScope - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy-ink': '#0F172A',
+            'amber-primary': '#F59E0B',
+          },
+          fontFamily: {
+            'serif': ['Merriweather', 'serif'],
+            'sans': ['Inter', 'sans-serif'],
+            'mono': ['Fira Code', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&amp;family=Inter:wght@400;500;600&amp;family=Merriweather:wght@700&amp;display=swap" rel="stylesheet">
+<style data-purpose="custom-utilities">
+    /* Subtle paper texture effect could go here if desired */
+    .tab-cutout {
+      position: relative;
+    }
+    .tab-cutout::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 12px;
+      background-color: white;
+      border-radius: 4px 4px 0 0;
+      border: 1px solid #cbd5e1;
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body class="bg-navy-ink min-h-screen flex flex-col items-center justify-center p-4 font-sans text-slate-800">
+<!-- BEGIN: Login Container -->
+<main class="w-full max-w-md relative z-10">
+<!-- Login Card -->
+<div class="bg-white rounded-lg shadow-xl border p-8 pt-10 relative">
+<!-- Logo Section -->
+<div class="flex justify-center mb-6">
+<img alt="InternScope Logo" class="h-24 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtdWgn_5ggAXtd6yxbRKHvsRy8fsuBkWeHPaoG-iFt0qwFIfUFhWgxebSuaDBYasCxdEUbvdBXlCzXK1Uchxx4QTQeU51-DQEnjAP7dcdFFxFkvoI0P7eLysXR655OlFfOCYH72RXE60g-gDGeR-jPmafX6Levvkp4Ff_36HgP38-C6OI3LysvyEd9-sCh4X7wLb3wh6iE6QrT_8szkti2rKn4tUWLv50ncO-OvvDFm5E-IDPt01G-vXcC542vPa4GPQ">
+</div>
+<!-- Header Section -->
+<div class="text-center mb-8">
+<h1 class="text-3xl font-serif font-bold text-navy-ink mb-2">Staj'ına Giriş Yap</h1>
+<p class="text-slate-500 text-sm">Staj deneyimlerini paylaş</p>
+</div>
+<!-- Login Form -->
+<form class="space-y-6">
+<!-- Social Login -->
+<div class="mt-6">
+<button class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-navy-ink bg-amber-primary hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors" type="button">
+<span class="mr-2 font-bold bg-white text-blue-600 rounded-sm px-1 text-xs">in</span> LinkedIn ile Giriş Yap
+        </button>
+</div>
+</form>
+</div>
+</main>
+<!-- END: Login Container -->
+<!-- BEGIN: Footer Link -->
+<div class="mt-8 text-center">
+<a class="font-mono text-sm text-slate-400 hover:text-white transition-colors" href="#">
+      ← Ana Sayfaya Dön
+    </a>
+</div>
+<!-- END: Footer Link -->
+</body></html>
