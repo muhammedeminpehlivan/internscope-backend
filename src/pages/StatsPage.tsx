@@ -32,7 +32,7 @@ interface FilterOption {
 
 export default function StatsPage() {
   const { isAuth } = useAuth()
-  const [needsAuth, setNeedsAuth] = useState(!isAuth)
+  const [needsAuth, setNeedsAuth] = useState(false)
   const [universityStats, setUniversityStats] = useState<UniversityStats[]>([])
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([])
   const [overallStats, setOverallStats] = useState<OverallStats | null>(null)
@@ -46,6 +46,10 @@ export default function StatsPage() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('')
   const [selectedCompany, setSelectedCompany] = useState<string>('')
   const [allInternships, setAllInternships] = useState<any[]>([])
+
+  useEffect(() => {
+    setNeedsAuth(!isAuth)
+  }, [isAuth])
 
   useEffect(() => {
     const fetchStats = async () => {
