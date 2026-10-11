@@ -15,13 +15,16 @@ public class AdminService : IAdminService
     private readonly IMapper _mapper;
     private readonly IInternshipService _internshipService;
     private readonly ILogger<AdminService> _logger;
+    private readonly INotificationService _notificationService;
 
-    public AdminService(AppDbContext context, IMapper mapper, IInternshipService internshipService, ILogger<AdminService> logger)
+    public AdminService(AppDbContext context, IMapper mapper, IInternshipService internshipService, ILogger<AdminService> logger,
+        INotificationService notificationService)
     {
         _context = context;
         _mapper = mapper;
         _internshipService = internshipService;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     private const int WeeklyChartWeeks = 8;
@@ -152,9 +155,20 @@ public class AdminService : IAdminService
         if (verifySgk && string.IsNullOrEmpty(internship.SgkDocumentUrl))
             return Error.Validation("SGK belgesi yüklenmemiş, belgeli onay yapılamaz.");
 
+        var wasApproved = internship.Status == InternshipStatus.Approved;
         internship.Status = InternshipStatus.Approved;
         if (verifySgk) internship.IsSgkVerified = true;
         internship.UpdatedAt = DateTime.UtcNow;
+
+        // Zaten onaylıysa (ör. sonradan SGK doğrulaması) tekrar "onaylandı" bildirimi gitmesin
+        if (!wasApproved)
+        {
+            var companyName = await GetCompanyNameAsync(internship.CompanyId);
+            var sgkNote = verifySgk ? " SGK belgeniz de doğrulandı." : "";
+            _notificationService.Notify(internship.UserId, NotificationType.InternshipApproved,
+                $"{companyName} staj değerlendirmeniz onaylandı ve yayına alındı.{sgkNote}", internship.Id);
+        }
+
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Staj onaylandı: {InternshipId} (SGK={VerifySgk})", id, verifySgk);
@@ -169,6 +183,12 @@ public class AdminService : IAdminService
         internship.Status = InternshipStatus.Rejected;
         internship.RejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         internship.UpdatedAt = DateTime.UtcNow;
+
+        var companyName = await GetCompanyNameAsync(internship.CompanyId);
+        _notificationService.Notify(internship.UserId, NotificationType.InternshipRejected,
+            $"{companyName} staj değerlendirmeniz reddedildi.{ReasonText(internship.RejectionReason)} Düzenleyip tekrar gönderebilirsiniz.",
+            internship.Id);
+
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Staj reddedildi: {InternshipId} (gerekçe: {HasReason})", id, internship.RejectionReason != null);
@@ -376,6 +396,12 @@ public class AdminService : IAdminService
         internship.PendingChangesJson = null;
         internship.ChangeRejectionReason = null; // önceki red gerekçesi varsa temizle
         internship.UpdatedAt = DateTime.UtcNow;
+
+        // Düzenleme şirketi değiştirmiş olabilir: yeni şirket adı (henüz kaydedilmemiş olsa da) kullanılır
+        var companyName = await GetCompanyNameAsync(internship.CompanyId);
+        _notificationService.Notify(internship.UserId, NotificationType.InternshipChangesApproved,
+            $"{companyName} stajınızdaki düzenlemeler onaylandı ve yayına alındı.", internship.Id);
+
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Bekleyen değişiklik onaylandı: {InternshipId}", id);
@@ -393,9 +419,22 @@ public class AdminService : IAdminService
         internship.PendingChangesJson = null;
         internship.ChangeRejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         internship.UpdatedAt = DateTime.UtcNow;
+
+        var companyName = await GetCompanyNameAsync(internship.CompanyId);
+        _notificationService.Notify(internship.UserId, NotificationType.InternshipChangesRejected,
+            $"{companyName} stajınızdaki düzenlemeler reddedildi, eski hali yayında kalmaya devam ediyor.{ReasonText(internship.ChangeRejectionReason)}",
+            internship.Id);
+
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Bekleyen değişiklik reddedildi: {InternshipId} (gerekçe: {HasReason})", id, internship.ChangeRejectionReason != null);
         return Result.Success();
     }
+
+    // FindAsync önce takip edilen (henüz kaydedilmemiş) kayıtlara bakar: düzenlemeyle yeni açılan şirket de bulunur
+    private async Task<string> GetCompanyNameAsync(Guid companyId)
+        => (await _context.Companies.FindAsync(companyId))?.Name ?? "Bir";
+
+    private static string ReasonText(string? reason)
+        => reason == null ? "" : $" Gerekçe: {reason.TrimEnd('.', ' ')}.";
 }

@@ -102,6 +102,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CommentReport>(b =>
         {
             b.HasIndex(r => new { r.CommentId, r.ReportedByUserId }).IsUnique();
+
+            // FK'yi açıkça bağla: "ReportedBy" navigation'ı için EF konvansiyonu "ReportedById" arar,
+            // bulamayınca gölge bir kolon üretiyordu ve o kolon boş kaldığı için şikayet INSERT'i patlıyordu.
+            b.HasOne(r => r.ReportedBy)
+                .WithMany()
+                .HasForeignKey(r => r.ReportedByUserId);
         });
     }
 }

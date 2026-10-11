@@ -20,5 +20,10 @@ public enum NotificationType
     CommentRemoved,  // yorumun admin tarafından kaldırıldı
     CommentHidden,   // yorumun şikayetler nedeniyle otomatik gizlendi
     CommentReported, // (admin) bir yorum yeni şikayet aldı
-    CommentAutoHidden // (admin) bir yorum şikayet eşiğini geçip gizlendi
+    CommentAutoHidden, // (admin) bir yorum şikayet eşiğini geçip gizlendi
+    CommentReply,             // yorumuna (veya altındaki tartışmaya) cevap geldi
+    InternshipApproved,       // staj değerlendirmen onaylandı
+    InternshipRejected,       // staj değerlendirmen reddedildi
+    InternshipChangesApproved, // onaylı stajındaki düzenlemen onaylandı
+    InternshipChangesRejected  // onaylı stajındaki düzenlemen reddedildi
 }

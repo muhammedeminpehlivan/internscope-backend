@@ -49,11 +49,32 @@ public class CommentService : ICommentService
         // Tek seviye: bir cevaba cevap verilirse ana yoruma bağlanır
         var rootId = parent.ParentCommentId ?? parent.Id;
 
-        return await CreateCommentAsync(userId, internshipId, rootId, content);
+        // Bildirim: cevap verilen yorumun sahibi + (cevaba cevapsa) ana yorumun sahibi; kişi kendine bildirim almaz
+        var rootOwnerId = parent.ParentCommentId == null
+            ? parent.UserId
+            : await _context.InternshipComments.Where(c => c.Id == rootId).Select(c => c.UserId).FirstAsync();
+
+        return await CreateCommentAsync(userId, internshipId, rootId, content, async reply =>
+        {
+            var replierName = await _context.Users.Where(u => u.Id == userId).Select(u => u.FullName).FirstAsync();
+            var companyName = await GetCompanyNameAsync(internshipId);
+
+            if (parent.UserId != userId)
+                _notificationService.Notify(parent.UserId, NotificationType.CommentReply,
+                    $"{replierName}, {companyName} stajındaki yorumunuza cevap verdi: \"{Snippet(reply.Content)}\"",
+                    internshipId, reply.Id);
+
+            if (rootOwnerId != parent.UserId && rootOwnerId != userId)
+                _notificationService.Notify(rootOwnerId, NotificationType.CommentReply,
+                    $"{replierName}, {companyName} stajındaki yorumunuzun altına cevap yazdı: \"{Snippet(reply.Content)}\"",
+                    internshipId, reply.Id);
+        });
     }
 
-    // Yorum ve cevap için ortak kayıt: içerik filtresi + tekrar (spam) kontrolü
-    private async Task<Result<CommentOutputModel>> CreateCommentAsync(Guid userId, Guid internshipId, Guid? parentCommentId, string content)
+    // Yorum ve cevap için ortak kayıt: içerik filtresi + tekrar (spam) kontrolü.
+    // beforeSave: kayıttan hemen önce çalışır (ör. bildirim ekleme) — yorumla aynı SaveChanges'te yazılır.
+    private async Task<Result<CommentOutputModel>> CreateCommentAsync(Guid userId, Guid internshipId, Guid? parentCommentId,
+        string content, Func<InternshipComment, Task>? beforeSave = null)
     {
         var cleanContent = _contentFilter.Sanitize(content, removeLinks: true);
 
@@ -79,6 +100,8 @@ public class CommentService : ICommentService
         };
 
         _context.InternshipComments.Add(comment);
+        if (beforeSave != null)
+            await beforeSave(comment);
         await _context.SaveChangesAsync();
 
         // Mapping için User navigation'ını yükle

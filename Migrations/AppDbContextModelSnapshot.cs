@@ -96,9 +96,6 @@ namespace InternScope.Migrations
                     b.Property<int>("Reason")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("ReportedById")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("ReportedByUserId")
                         .HasColumnType("uuid");
 
@@ -107,7 +104,7 @@ namespace InternScope.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReportedById");
+                    b.HasIndex("ReportedByUserId");
 
                     b.HasIndex("CommentId", "ReportedByUserId")
                         .IsUnique();
@@ -649,7 +646,7 @@ namespace InternScope.Migrations
 
                     b.HasOne("InternScope.Entities.User", "ReportedBy")
                         .WithMany()
-                        .HasForeignKey("ReportedById")
+                        .HasForeignKey("ReportedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
