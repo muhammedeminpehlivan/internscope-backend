@@ -6,6 +6,8 @@ public class InternshipComment : BaseEntity
     public Guid UserId { get; set; }
     public string Content { get; set; } = null!;
     public bool IsDeleted { get; set; } = false;
+    // Şikayet eşiği aşılınca otomatik gizlenir; admin şikayetleri kapatırsa tekrar görünür
+    public bool IsHidden { get; set; } = false;
     public Guid? ParentCommentId { get; set; } // null = ana yorum, dolu = bir yoruma cevap
 
     public Internship Internship { get; set; } = null!;

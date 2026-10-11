@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using InternScope.Common;
+using InternScope.DTOs.Admin;
 using InternScope.DTOs.Internship;
 using InternScope.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,117 @@ public class AdminService : IAdminService
         _mapper = mapper;
         _internshipService = internshipService;
         _logger = logger;
+    }
+
+    private const int WeeklyChartWeeks = 8;
+    private const int TopReportedUserCount = 10;
+
+    public async Task<AdminStatsOutputModel> GetStatsAsync()
+    {
+        var now = DateTime.UtcNow;
+        var weekAgo = now.AddDays(-7);
+        var twoWeeksAgo = now.AddDays(-14);
+
+        // DbContext aynı anda tek sorgu çalıştırabildiği için sorgular sırayla
+        var pending = new PendingStatsModel
+        {
+            Internships = await _context.Internships.CountAsync(i => i.Status == InternshipStatus.Pending),
+            InternshipChanges = await _context.Internships.CountAsync(i => i.HasPendingChanges),
+            ReportedComments = await _context.InternshipComments
+                .CountAsync(c => !c.IsDeleted && c.Reports.Any(r => !r.IsReviewed))
+        };
+
+        var totals = new TotalStatsModel
+        {
+            Users = await _context.Users.CountAsync(),
+            ApprovedInternships = await _context.Internships.CountAsync(i => i.Status == InternshipStatus.Approved),
+            Companies = await _context.Companies.CountAsync(),
+            Comments = await _context.InternshipComments.CountAsync(c => !c.IsDeleted)
+        };
+
+        var lastWeek = new LastWeekStatsModel
+        {
+            NewInternships = await _context.Internships.CountAsync(i => i.CreatedAt >= weekAgo),
+            NewInternshipsPreviousWeek = await _context.Internships
+                .CountAsync(i => i.CreatedAt >= twoWeeksAgo && i.CreatedAt < weekAgo),
+            NewUsers = await _context.Users.CountAsync(u => u.CreatedAt >= weekAgo),
+            NewComments = await _context.InternshipComments.CountAsync(c => c.CreatedAt >= weekAgo)
+        };
+
+        return new AdminStatsOutputModel
+        {
+            Pending = pending,
+            Totals = totals,
+            LastWeek = lastWeek,
+            WeeklyInternships = await GetWeeklyInternshipCountsAsync(now),
+            TopReportedUsers = await GetTopReportedUsersAsync()
+        };
+    }
+
+    // Son N takvim haftasında gönderilen değerlendirme sayısı (durumdan bağımsız: reddedilenler dahil).
+    // Boş haftalar da 0 ile döner ki grafik kopuk olmasın.
+    private async Task<List<WeeklyCountModel>> GetWeeklyInternshipCountsAsync(DateTime now)
+    {
+        var today = DateOnly.FromDateTime(now);
+        var thisMonday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        var firstMonday = thisMonday.AddDays(-7 * (WeeklyChartWeeks - 1));
+        var from = firstMonday.ToDateTime(TimeOnly.MinValue);
+
+        // Veri küçük (en fazla birkaç haftalık kayıt tarihi): haftalara bellekte bölmek SQL'de
+        // tarih fonksiyonlarıyla uğraşmaktan daha basit
+        var dates = await _context.Internships
+            .Where(i => i.CreatedAt >= from)
+            .Select(i => i.CreatedAt)
+            .ToListAsync();
+
+        return Enumerable.Range(0, WeeklyChartWeeks)
+            .Select(w =>
+            {
+                var start = firstMonday.AddDays(7 * w);
+                var end = start.AddDays(7);
+                return new WeeklyCountModel
+                {
+                    WeekStart = start,
+                    Count = dates.Count(d => DateOnly.FromDateTime(d) >= start && DateOnly.FromDateTime(d) < end)
+                };
+            })
+            .ToList();
+    }
+
+    // Yorumları en çok şikayet alan kullanıcılar (kapatılmış şikayetler dahil; açık olanlar ayrıca gösterilir)
+    private async Task<List<ReportedUserModel>> GetTopReportedUsersAsync()
+    {
+        var top = await _context.CommentReports
+            .GroupBy(r => r.Comment.UserId)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                TotalReports = g.Count(),
+                OpenReports = g.Count(r => !r.IsReviewed),
+                ReportedCommentCount = g.Select(r => r.CommentId).Distinct().Count()
+            })
+            .OrderByDescending(x => x.TotalReports)
+            .ThenByDescending(x => x.OpenReports)
+            .Take(TopReportedUserCount)
+            .ToListAsync();
+
+        var userIds = top.Select(x => x.UserId).ToList();
+        var users = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email });
+
+        return top
+            .Where(x => users.ContainsKey(x.UserId))
+            .Select(x => new ReportedUserModel
+            {
+                UserId = x.UserId,
+                FullName = users[x.UserId].FullName,
+                Email = users[x.UserId].Email,
+                TotalReports = x.TotalReports,
+                OpenReports = x.OpenReports,
+                ReportedCommentCount = x.ReportedCommentCount
+            })
+            .ToList();
     }
 
     public async Task<List<AdminInternshipOutputModel>> GetPendingAsync()

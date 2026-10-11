@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CommentReaction> CommentReactions { get; set; }
     public DbSet<CommentReport> CommentReports { get; set; }
     public DbSet<NewsArticle> NewsArticles { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,6 +90,12 @@ public class AppDbContext : DbContext
         {
             b.HasIndex(n => n.SourceUrl).IsUnique();
             b.HasIndex(n => n.PublishedAt);
+        });
+
+        // Zil ikonu sorgusu: kullanıcının (okunmamış) bildirimleri, en yeni önce
+        modelBuilder.Entity<Notification>(b =>
+        {
+            b.HasIndex(n => new { n.UserId, n.IsRead, n.CreatedAt });
         });
 
         // Bir kullanıcı aynı yorumu sadece bir kez şikayet edebilir

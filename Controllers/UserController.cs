@@ -1,8 +1,10 @@
 using InternScope.Common;
 using InternScope.DTOs.User;
+using InternScope.Extensions;
 using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InternScope.Controllers;
 
@@ -21,6 +23,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpPost("send-verification-email")]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.VerificationEmail)]
     public async Task<IActionResult> SendVerificationEmail([FromBody] string studentEmail)
     {
         var result = await _userService.SendVerificationEmailAsync(GetUserId(), studentEmail);

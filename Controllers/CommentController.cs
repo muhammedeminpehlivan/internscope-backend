@@ -1,8 +1,10 @@
 using InternScope.Common;
 using InternScope.DTOs.Comment;
+using InternScope.Extensions;
 using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InternScope.Controllers;
 
@@ -27,6 +29,7 @@ public class CommentController : ApiControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.Comment)]
     public async Task<IActionResult> AddComment(Guid internshipId, [FromBody] CommentInputModel input)
     {
         var result = await _commentService.AddCommentAsync(GetUserId(), internshipId, input.Content);
@@ -34,6 +37,7 @@ public class CommentController : ApiControllerBase
     }
 
     [HttpPost("{commentId}/replies")]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.Comment)]
     public async Task<IActionResult> ReplyToComment(Guid internshipId, Guid commentId, [FromBody] CommentInputModel input)
     {
         var result = await _commentService.AddReplyAsync(GetUserId(), internshipId, commentId, input.Content);
@@ -41,6 +45,7 @@ public class CommentController : ApiControllerBase
     }
 
     [HttpPut("{commentId}")]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.CommentEdit)]
     public async Task<IActionResult> EditComment(Guid internshipId, Guid commentId, [FromBody] CommentInputModel input)
     {
         var result = await _commentService.UpdateCommentAsync(GetUserId(), commentId, input.Content);
@@ -55,9 +60,12 @@ public class CommentController : ApiControllerBase
     }
 
     [HttpPost("{commentId}/report")]
-    public async Task<IActionResult> ReportComment(Guid internshipId, Guid commentId)
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.Report)]
+    public async Task<IActionResult> ReportComment(Guid internshipId, Guid commentId, [FromBody] ReportInputModel? input)
     {
-        var result = await _commentService.ReportCommentAsync(GetUserId(), commentId);
+        // Gövde opsiyonel: body göndermeyen istemciler de şikayet edebilsin (sebep = Other)
+        var result = await _commentService.ReportCommentAsync(GetUserId(), commentId,
+            input?.Reason ?? Entities.ReportReason.Other, input?.Note);
         return result.ToActionResult("Şikayetiniz iletildi.");
     }
 }
@@ -83,6 +91,7 @@ public class ReactionController : ApiControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.Reaction)]
     public async Task<IActionResult> React(Guid commentId, [FromBody] ReactionInputModel input)
     {
         var result = await _reactionService.UpsertReactionAsync(GetUserId(), commentId, input.IsPositive);

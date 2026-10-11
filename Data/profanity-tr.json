@@ -1,0 +1,21 @@
+{
+  "_aciklama": "Küfür filtresi listesi. Yazım şekli fark etmez: büyük/küçük harf, Türkçe karakter (ş→s, ı→i...), leet (4→a, 1→i, 0→o...) ve tekrar eden harfler (yarrak→yarak) yükleme sırasında normalize edilir. Değişiklikten sonra uygulama yeniden başlatılmalı.",
+
+  "_exactWords": "Sadece tek başına geçtiğinde sansürlenir (kelimenin içinde geçerse dokunulmaz).",
+  "exactWords": [
+    "amk", "amq", "aq", "mk", "sg", "oç", "piç", "piçlik", "puşt",
+    "sikerim", "sikeyim", "sikiyim", "sikik", "sikko",
+    "shit", "asshole"
+  ],
+
+  "_prefixes": "Kelime bu kökle BAŞLIYORSA sansürlenir (ekli halleri de yakalanır). Kısa / masum kelimelerle çakışabilecek kökleri buraya koyma, exactWords'e koy.",
+  "prefixes": [
+    "orospu", "orosbu", "siktir", "amcık", "amına", "ananısik", "ananızısik",
+    "yarrak", "dalyarrak", "taşşak", "pezevenk", "kahpe", "şerefsiz", "ibne",
+    "kaltak", "yavşak", "gavat", "götveren", "götlek",
+    "fuck", "motherf", "bitch"
+  ],
+
+  "_safeWords": "prefixes ile yanlışlıkla yakalanan masum kelimeler (bu kökle başlayan kelimeler sansürlenmez).",
+  "safeWords": []
+}

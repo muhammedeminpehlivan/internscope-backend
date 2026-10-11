@@ -1,10 +1,12 @@
 using InternScope.Common;
+using InternScope.DTOs.Admin;
 using InternScope.DTOs.Internship;
 
 namespace InternScope.Services;
 
 public interface IAdminService
 {
+    Task<AdminStatsOutputModel> GetStatsAsync();
     Task<List<AdminInternshipOutputModel>> GetPendingAsync();
     Task<Result> ApproveAsync(Guid id, bool verifySgk);
     Task<Result> RejectAsync(Guid id, string? reason);

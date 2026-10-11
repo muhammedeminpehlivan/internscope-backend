@@ -90,6 +90,12 @@ namespace InternScope.Migrations
                     b.Property<bool>("IsReviewed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("ReportedById")
                         .HasColumnType("uuid");
 
@@ -315,6 +321,9 @@ namespace InternScope.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid?>("ParentCommentId")
                         .HasColumnType("uuid");
 
@@ -456,6 +465,44 @@ namespace InternScope.Migrations
                         .IsUnique();
 
                     b.ToTable("NewsArticles");
+                });
+
+            modelBuilder.Entity("InternScope.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InternshipId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsRead", "CreatedAt");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("InternScope.Entities.Question", b =>
@@ -719,6 +766,17 @@ namespace InternScope.Migrations
                         .IsRequired();
 
                     b.Navigation("Internship");
+                });
+
+            modelBuilder.Entity("InternScope.Entities.Notification", b =>
+                {
+                    b.HasOne("InternScope.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InternScope.Entities.User", b =>

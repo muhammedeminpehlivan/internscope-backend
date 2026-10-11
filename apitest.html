@@ -240,7 +240,13 @@ const CAT=[
    ["POST","/internship/{iid}/comments",{content:"Çok faydalı bir değerlendirme, teşekkürler."}],
    ["POST","/internship/{iid}/comments/{cid}/replies",{content:"Katılıyorum, benim deneyimim de benzerdi."},"cevaba cevap → ana yoruma bağlanır"],
    ["DELETE","/internship/{iid}/comments/{cid}"],
-   ["POST","/internship/{iid}/comments/{cid}/report"],
+   ["POST","/internship/{iid}/comments/{cid}/report",{reason:"Spam",note:"Reklam linki atıyor"},"reason: Other|Profanity|Spam|Harassment|Misinformation (body opsiyonel)"],
+ ]],
+ ["Bildirim  [Authorize]",[
+   ["GET","/notification",null,"son 50; ?unreadOnly=true"],
+   ["GET","/notification/unread-count"],
+   ["PUT","/notification/{id}/read"],
+   ["PUT","/notification/read-all"],
  ]],
  ["Reaction",[
    ["GET","/internship/{iid}/reactions"],
@@ -267,6 +273,7 @@ const CAT=[
    ["GET","/admin/pending-changes"],
    ["PUT","/admin/{id}/approve-changes"],
    ["PUT","/admin/{id}/reject-changes"],
+   ["GET","/admin/stats",null,"dashboard: bekleyenler, toplamlar, son 7 gün, 8 haftalık grafik, en çok şikayet alanlar"],
    ["GET","/admin/reported-comments"],
    ["DELETE","/admin/comments/{cid}"],
    ["PUT","/admin/comments/{cid}/dismiss-reports"],

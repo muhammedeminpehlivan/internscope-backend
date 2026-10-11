@@ -13,6 +13,11 @@
     <Using Include="InternScope.Data" />
   </ItemGroup>
 
+  <!-- Küfür filtresi listesi; ContentFilter çalışma zamanında bin/Data altından okur -->
+  <ItemGroup>
+    <Content Update="Data\profanity-tr.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />

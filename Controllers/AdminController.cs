@@ -20,6 +20,14 @@ public class AdminController : ControllerBase
         _commentService = commentService;
     }
 
+    // Dashboard özeti: bekleyen işler, toplamlar, son hafta, haftalık grafik, en çok şikayet alanlar
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats()
+    {
+        var stats = await _adminService.GetStatsAsync();
+        return Ok(stats);
+    }
+
     [HttpGet("pending")]
     public async Task<IActionResult> GetPending()
     {
@@ -95,7 +103,7 @@ public class AdminController : ControllerBase
     [HttpPut("comments/{commentId}/dismiss-reports")]
     public async Task<IActionResult> DismissReports(Guid commentId)
     {
-        await _commentService.AdminDismissReportsAsync(commentId);
-        return Ok(new { message = "Şikayetler kapatıldı, yorum yayında kalıyor." });
+        var result = await _commentService.AdminDismissReportsAsync(commentId);
+        return result.ToActionResult("Şikayetler kapatıldı, yorum yayında kalıyor.");
     }
 }

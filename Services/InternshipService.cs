@@ -16,10 +16,13 @@ public class InternshipService : IInternshipService
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IMapper _mapper;
     private readonly ILogger<InternshipService> _logger;
+    private readonly IContentFilter _contentFilter;
 
     public InternshipService(AppDbContext context, ICompanyService companyService, IMapper mapper,
-        IDepartmentService departmentService, ICloudinaryService cloudinaryService, ILogger<InternshipService> logger)
+        IDepartmentService departmentService, ICloudinaryService cloudinaryService, ILogger<InternshipService> logger,
+        IContentFilter contentFilter)
     {
+        _contentFilter = contentFilter;
         _context = context;
         _companyService = companyService;
         _mapper = mapper;
@@ -35,6 +38,8 @@ public class InternshipService : IInternshipService
             return Error.NotFound("Kullanıcı bulunamadı.");
         if (!user.IsEmailVerified)
             return Error.Validation("Staj değerlendirmesi girmek için önce öğrenci mailinizi doğrulamalısınız.");
+
+        SanitizeInput(input);
 
         var company = await _companyService.GetOrCreateCompanyAsync(input.CompanyName);
 
@@ -133,6 +138,9 @@ public class InternshipService : IInternshipService
         if (internship.UserId != userId)
             return Error.Forbidden("Bu staj size ait değil.");
 
+        // Bekleyen değişiklik JSON'u da temiz haliyle saklansın diye en başta
+        SanitizeInput(input);
+
         if (internship.Status == InternshipStatus.Approved)
         {
             internship.PendingChangesJson = JsonSerializer.Serialize(input);
@@ -177,6 +185,18 @@ public class InternshipService : IInternshipService
 
         _logger.LogInformation("Kullanıcı kendi stajını sildi: {InternshipId} — UserId={UserId}", internshipId, userId);
         return Result.Success();
+    }
+
+    // Serbest metin alanlarındaki küfürleri sansürler. Şirket adı bilinçli olarak
+    // filtrelenmez: sansürlü isimle yeni şirket kaydı açılmasın, admin onayında yakalanır.
+    // Linkler kaldırılmaz (ör. kariyer sayfası linki faydalı olabilir, zaten admin onaylı).
+    private void SanitizeInput(InternshipInputModel input)
+    {
+        input.CompanyDepartment = _contentFilter.Sanitize(input.CompanyDepartment);
+        if (input.Scores?.AdditionalTips != null)
+            input.Scores.AdditionalTips = _contentFilter.Sanitize(input.Scores.AdditionalTips);
+        if (input.Interview?.Description != null)
+            input.Interview.Description = _contentFilter.Sanitize(input.Interview.Description);
     }
 
     public async Task ApplyInputAsync(Internship internship, InternshipInputModel input)

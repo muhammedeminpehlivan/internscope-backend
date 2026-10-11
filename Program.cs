@@ -16,6 +16,7 @@ builder.Services.AddSwaggerDocumentation();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddCorsPolicy();
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddRateLimiting();
 
 var app = builder.Build();
 
@@ -51,6 +52,8 @@ app.UseCookiePolicy(new CookiePolicyOptions
 
 app.UseAuthentication();
 app.UseAuthorization();
+// Authentication'dan sonra olmalı: limitler kullanıcı id'sine göre sayılıyor
+app.UseRateLimiter();
 
 app.MapControllers();
 

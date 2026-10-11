@@ -1,8 +1,10 @@
 using InternScope.Common;
 using InternScope.DTOs.Internship;
+using InternScope.Extensions;
 using InternScope.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InternScope.Controllers;
 
@@ -19,6 +21,7 @@ public class InternshipController : ApiControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.InternshipCreate)]
     public async Task<IActionResult> Create([FromBody] InternshipInputModel input)
     {
         var result = await _internshipService.CreateInternshipAsync(GetUserId(), input);
@@ -28,6 +31,7 @@ public class InternshipController : ApiControllerBase
     }
 
     [HttpPut("{id}")]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.InternshipEdit)]
     public async Task<IActionResult> Update(Guid id, [FromBody] InternshipInputModel input)
     {
         var result = await _internshipService.UpdateAsync(GetUserId(), id, input);
@@ -57,6 +61,7 @@ public class InternshipController : ApiControllerBase
     }
 
     [HttpPost("{id}/sgk")]
+    [EnableRateLimiting(ServiceExtensions.RateLimitPolicies.InternshipEdit)]
     public async Task<IActionResult> UploadSgk(Guid id, IFormFile file, [FromForm] string verificationCode)
     {
         var result = await _internshipService.UploadSgkAsync(GetUserId(), id, file, verificationCode);
