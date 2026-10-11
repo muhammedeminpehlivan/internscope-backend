@@ -74,6 +74,7 @@ public class MappingProfile : Profile
                 .Where(r => r.UserId == requestingUserId)
                 .Select(r => (bool?)r.IsPositive)
                 .FirstOrDefault()))
-            .ForMember(d => d.IsOwn, o => o.MapFrom(s => s.UserId == requestingUserId));
+            .ForMember(d => d.IsOwn, o => o.MapFrom(s => s.UserId == requestingUserId))
+            .ForMember(d => d.Replies, o => o.Ignore()); // ağaç CommentService'te kurulur
     }
 }

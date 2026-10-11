@@ -212,6 +212,7 @@ const CREATE_BODY={
   universityId:"<uni-guid>", departmentId:"<dep-guid>", cityId:"<city-guid>",
   companyDepartment:"Yazılım Geliştirme",
   startDate:"2025-06-16", endDate:"2025-08-16",
+  studentYear:"ThirdYear", // FirstYear|SecondYear|ThirdYear|FourthYear|Graduate
   isAnonymous:false, term:"ShortTerm",
   stipendMin:15000, stipendMax:22000, currency:"TRY", returnOfferReceived:false,
   scores:{learningScore:4,mentoringScore:5,techInfraScore:4,workEnvironmentScore:5,salaryScore:3,wouldRecommend:true,additionalTips:"Güzel deneyimdi"},
@@ -237,6 +238,7 @@ const CAT=[
  ["Yorum  (path'te internship id)",[
    ["GET","/internship/{iid}/comments",null,"anonim okunur"],
    ["POST","/internship/{iid}/comments",{content:"Çok faydalı bir değerlendirme, teşekkürler."}],
+   ["POST","/internship/{iid}/comments/{cid}/replies",{content:"Katılıyorum, benim deneyimim de benzerdi."},"cevaba cevap → ana yoruma bağlanır"],
    ["DELETE","/internship/{iid}/comments/{cid}"],
    ["POST","/internship/{iid}/comments/{cid}/report"],
  ]],

@@ -69,6 +69,15 @@ public class AppDbContext : DbContext
             b.HasIndex(i => new { i.Status, i.CreatedAt });
         });
 
+        // Yorum cevapları: self-reference, yorumlar soft-delete olduğu için cascade gerekmez
+        modelBuilder.Entity<InternshipComment>(b =>
+        {
+            b.HasOne(c => c.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         // Bir kullanıcı aynı yoruma sadece bir reaction verebilir
         modelBuilder.Entity<CommentReaction>(b =>
         {

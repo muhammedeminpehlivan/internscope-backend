@@ -10,6 +10,8 @@ namespace InternScope.DTOs.Internship
         public required string CompanyDepartment { get; set; }
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
+        // Stajın hangi sınıftayken yapıldığı (1-4. sınıf veya mezun).
+        public StudentYear StudentYear { get; set; }
         public bool IsAnonymous { get; set; }
         public InternshipTerm Term { get; set; }
         public int? StipendMin { get; set; }
@@ -51,6 +53,7 @@ namespace InternScope.DTOs.Internship
         public string CompanyDepartment { get; set; } = null!;
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
+        public StudentYear StudentYear { get; set; }
         public bool IsAnonymous { get; set; }
         public bool IsSgkVerified { get; set; }
         public string Status { get; set; } = null!;

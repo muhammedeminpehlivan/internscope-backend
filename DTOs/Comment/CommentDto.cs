@@ -8,6 +8,7 @@ namespace InternScope.DTOs.Comment
     public class CommentOutputModel
     {
         public Guid Id { get; set; }
+        public Guid? ParentCommentId { get; set; } // cevapsa bağlı olduğu ana yorum
         public string Content { get; set; } = null!;
         public string AuthorName { get; set; } = null!;
         public string? AuthorProfilePictureUrl { get; set; }
@@ -19,6 +20,7 @@ namespace InternScope.DTOs.Comment
         public int Upvotes { get; set; }
         public int Downvotes { get; set; }
         public bool? UserReaction { get; set; } // null=yok, true=like, false=dislike
+        public List<CommentOutputModel> Replies { get; set; } = []; // sadece ana yorumlarda dolu (tek seviye)
     }
 
     public class ReactionInputModel

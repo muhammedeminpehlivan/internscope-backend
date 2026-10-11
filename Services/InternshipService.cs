@@ -49,6 +49,7 @@ public class InternshipService : IInternshipService
             CompanyDepartment = input.CompanyDepartment,
             StartDate = input.StartDate,
             EndDate = input.EndDate,
+            StudentYear = input.StudentYear,
             IsAnonymous = input.IsAnonymous,
             Term = input.Term,
             StipendMin = input.StipendMin,
@@ -189,6 +190,7 @@ public class InternshipService : IInternshipService
         internship.CompanyDepartment = input.CompanyDepartment;
         internship.StartDate = input.StartDate;
         internship.EndDate = input.EndDate;
+        internship.StudentYear = input.StudentYear;
         internship.IsAnonymous = input.IsAnonymous;
         internship.Term = input.Term;
         internship.StipendMin = input.StipendMin;

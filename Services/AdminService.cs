@@ -99,25 +99,152 @@ public class AdminService : IAdminService
 
     public async Task<List<PendingChangeReviewModel>> GetPendingChangesAsync()
     {
-        var currentList = await _context.Internships
+        var internships = await _context.Internships
             .Where(i => i.HasPendingChanges)
+            .Include(i => i.Company)
+            .Include(i => i.University)
+            .Include(i => i.Department)
+            .Include(i => i.City)
+            .Include(i => i.User)
+            .Include(i => i.Score)
+            .Include(i => i.InterviewProcess)
             .OrderBy(i => i.UpdatedAt)
-            .ProjectTo<AdminInternshipOutputModel>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
-        var jsonMap = await _context.Internships
-            .Where(i => i.HasPendingChanges)
-            .Select(i => new { i.Id, i.PendingChangesJson })
-            .ToDictionaryAsync(x => x.Id, x => x.PendingChangesJson);
+        // Önerilen değerlerdeki Id'leri (şehir/üniversite/bölüm) okunur isme çevirmek için.
+        var universityNames = await _context.Universities.ToDictionaryAsync(u => u.Id, u => u.Name);
+        var departmentNames = await _context.Departments.ToDictionaryAsync(d => d.Id, d => d.Name);
+        var cityNames = await _context.Cities.ToDictionaryAsync(c => c.Id, c => c.Name);
 
-        return currentList.Select(c => new PendingChangeReviewModel
+        var result = new List<PendingChangeReviewModel>();
+        foreach (var internship in internships)
         {
-            Current = c,
-            Proposed = jsonMap.TryGetValue(c.Id, out var json) && json != null
-                ? JsonSerializer.Deserialize<InternshipInputModel>(json)
-                : null
-        }).ToList();
+            if (internship.PendingChangesJson == null) continue;
+
+            var proposed = JsonSerializer.Deserialize<InternshipInputModel>(internship.PendingChangesJson);
+            if (proposed == null) continue;
+
+            result.Add(new PendingChangeReviewModel
+            {
+                Current = _mapper.Map<AdminInternshipOutputModel>(internship),
+                Proposed = proposed,
+                Changes = BuildChanges(internship, proposed, universityNames, departmentNames, cityNames)
+            });
+        }
+
+        return result;
     }
+
+    // Mevcut staj ile önerilen düzenlemeyi alan alan kıyaslar; yalnızca gerçekten
+    // değişen alanları eski/yeni değerleriyle döndürür. Id'ler okunur isme çevrilir.
+    private static List<PendingFieldChange> BuildChanges(
+        Internship current,
+        InternshipInputModel proposed,
+        IReadOnlyDictionary<Guid, string> universityNames,
+        IReadOnlyDictionary<Guid, string> departmentNames,
+        IReadOnlyDictionary<Guid, string> cityNames)
+    {
+        var changes = new List<PendingFieldChange>();
+
+        void Add(string field, string label, string? oldVal, string? newVal)
+        {
+            if (!string.Equals(oldVal, newVal, StringComparison.Ordinal))
+                changes.Add(new PendingFieldChange
+                {
+                    Field = field,
+                    Label = label,
+                    OldValue = oldVal,
+                    NewValue = newVal
+                });
+        }
+
+        Add("companyName", "Şirket", current.Company?.Name, proposed.CompanyName);
+        Add("university", "Üniversite",
+            current.University?.Name, universityNames.GetValueOrDefault(proposed.UniversityId));
+        Add("department", "Bölüm",
+            current.Department?.Name, departmentNames.GetValueOrDefault(proposed.DepartmentId));
+        Add("companyDepartment", "Birim / Departman", current.CompanyDepartment, proposed.CompanyDepartment);
+        Add("city", "Şehir",
+            current.City?.Name, cityNames.GetValueOrDefault(proposed.CityId));
+        Add("startDate", "Başlangıç Tarihi",
+            current.StartDate.ToString("dd.MM.yyyy"), proposed.StartDate.ToString("dd.MM.yyyy"));
+        Add("endDate", "Bitiş Tarihi",
+            current.EndDate.ToString("dd.MM.yyyy"), proposed.EndDate.ToString("dd.MM.yyyy"));
+        Add("studentYear", "Sınıf", StudentYearLabel(current.StudentYear), StudentYearLabel(proposed.StudentYear));
+        Add("term", "Staj Dönemi", TermLabel(current.Term), TermLabel(proposed.Term));
+        Add("isAnonymous", "Anonim", BoolLabel(current.IsAnonymous), BoolLabel(proposed.IsAnonymous));
+        Add("returnOfferReceived", "Geri Dönüş Teklifi",
+            BoolLabel(current.ReturnOfferReceived), BoolLabel(proposed.ReturnOfferReceived));
+        Add("stipendMin", "Asgari Burs", current.StipendMin?.ToString(), proposed.StipendMin?.ToString());
+        Add("stipendMax", "Azami Burs", current.StipendMax?.ToString(), proposed.StipendMax?.ToString());
+        Add("currency", "Para Birimi", current.Currency, proposed.Currency);
+
+        if (current.Score != null)
+        {
+            Add("learningScore", "Öğrenme Puanı",
+                current.Score.LearningScore.ToString(), proposed.Scores?.LearningScore?.ToString());
+            Add("mentoringScore", "Mentorluk Puanı",
+                current.Score.MentoringScore.ToString(), proposed.Scores?.MentoringScore?.ToString());
+            Add("techInfraScore", "Teknik Altyapı Puanı",
+                current.Score.TechInfraScore.ToString(), proposed.Scores?.TechInfraScore?.ToString());
+            Add("workEnvironmentScore", "Çalışma Ortamı Puanı",
+                current.Score.WorkEnvironmentScore.ToString(), proposed.Scores?.WorkEnvironmentScore?.ToString());
+            Add("salaryScore", "Maaş Puanı",
+                current.Score.SalaryScore.ToString(), proposed.Scores?.SalaryScore?.ToString());
+            Add("wouldRecommend", "Tavsiye Eder",
+                BoolLabel(current.Score.WouldRecommend),
+                proposed.Scores?.WouldRecommend is { } rec ? BoolLabel(rec) : null);
+            Add("additionalTips", "Ek Tavsiyeler", current.Score.AdditionalTips, proposed.Scores?.AdditionalTips);
+        }
+
+        if (current.InterviewProcess != null)
+        {
+            Add("applicationMethod", "Başvuru Yöntemi",
+                ApplicationMethodLabel(current.InterviewProcess.ApplicationMethod),
+                proposed.Interview?.ApplicationMethod is { } m ? ApplicationMethodLabel(m) : null);
+            Add("stageCount", "Aşama Sayısı",
+                current.InterviewProcess.StageCount.ToString(), proposed.Interview?.StageCount?.ToString());
+            Add("interviewDescription", "Mülakat Açıklaması",
+                current.InterviewProcess.Description, proposed.Interview?.Description);
+        }
+
+        return changes;
+    }
+
+    private static string BoolLabel(bool value) => value ? "Evet" : "Hayır";
+
+    private static string StudentYearLabel(StudentYear year) => year switch
+    {
+        StudentYear.FirstYear => "1. Sınıf",
+        StudentYear.SecondYear => "2. Sınıf",
+        StudentYear.ThirdYear => "3. Sınıf",
+        StudentYear.FourthYear => "4. Sınıf",
+        StudentYear.Graduate => "Mezun",
+        _ => year.ToString()
+    };
+
+    private static string TermLabel(InternshipTerm term) => term switch
+    {
+        InternshipTerm.ShortTerm => "Kısa Dönem",
+        InternshipTerm.LongTerm => "Uzun Dönem",
+        _ => term.ToString()
+    };
+
+    private static string ApplicationMethodLabel(ApplicationMethod method) => method switch
+    {
+        ApplicationMethod.KariyerKapisi => "Kariyer Kapısı",
+        ApplicationMethod.Iskur => "İŞKUR",
+        ApplicationMethod.LinkedIn => "LinkedIn",
+        ApplicationMethod.KariyerNet => "Kariyer.net",
+        ApplicationMethod.Youthall => "Youthall",
+        ApplicationMethod.ToptalentCo => "toptalent.co",
+        ApplicationMethod.IndeedTurkiye => "Indeed Türkiye",
+        ApplicationMethod.CompanyWebsite => "Şirket Web Sitesi",
+        ApplicationMethod.Reference => "Referans",
+        ApplicationMethod.InternshipFair => "Staj Fuarı",
+        ApplicationMethod.Other => "Diğer",
+        _ => method.ToString()
+    };
 
     public async Task<Result> ApprovePendingChangesAsync(Guid id)
     {

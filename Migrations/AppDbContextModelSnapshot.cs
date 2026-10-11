@@ -233,6 +233,9 @@ namespace InternScope.Migrations
                     b.Property<int?>("StipendMin")
                         .HasColumnType("integer");
 
+                    b.Property<int>("StudentYear")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Term")
                         .HasColumnType("integer");
 
@@ -312,6 +315,9 @@ namespace InternScope.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("ParentCommentId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -321,6 +327,8 @@ namespace InternScope.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InternshipId");
+
+                    b.HasIndex("ParentCommentId");
 
                     b.HasIndex("UserId");
 
@@ -673,6 +681,11 @@ namespace InternScope.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("InternScope.Entities.InternshipComment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InternScope.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -680,6 +693,8 @@ namespace InternScope.Migrations
                         .IsRequired();
 
                     b.Navigation("Internship");
+
+                    b.Navigation("ParentComment");
 
                     b.Navigation("User");
                 });
@@ -747,6 +762,8 @@ namespace InternScope.Migrations
             modelBuilder.Entity("InternScope.Entities.InternshipComment", b =>
                 {
                     b.Navigation("Reactions");
+
+                    b.Navigation("Replies");
 
                     b.Navigation("Reports");
                 });

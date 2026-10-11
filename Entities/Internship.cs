@@ -9,6 +9,8 @@ namespace InternScope.Entities
         public string CompanyDepartment { get; set; } = null!;
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
+        // Stajın hangi sınıftayken yapıldığı (1-4. sınıf veya mezun).
+        public StudentYear StudentYear { get; set; }
         public bool IsAnonymous { get; set; }
         public bool IsSgkVerified { get; set; }
         public string? SgkDocumentUrl { get; set; }
@@ -52,5 +54,16 @@ namespace InternScope.Entities
     {
         ShortTerm,
         LongTerm
+    }
+
+    // Stajın yapıldığı öğrencilik seviyesi. int değerler korunur (1-4. sınıf),
+    // Graduate = mezunken yapılan staj.
+    public enum StudentYear
+    {
+        FirstYear = 1,
+        SecondYear = 2,
+        ThirdYear = 3,
+        FourthYear = 4,
+        Graduate = 5
     }
 }

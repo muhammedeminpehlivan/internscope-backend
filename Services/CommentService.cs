@@ -47,15 +47,56 @@ public class CommentService : ICommentService
         return output;
     }
 
+    public async Task<Result<CommentOutputModel>> AddReplyAsync(Guid userId, Guid internshipId, Guid parentCommentId, string content)
+    {
+        var parent = await _context.InternshipComments
+            .FirstOrDefaultAsync(c => c.Id == parentCommentId && c.InternshipId == internshipId && !c.IsDeleted);
+        if (parent == null)
+            return Error.NotFound("Cevap verilecek yorum bulunamadı.");
+
+        // Tek seviye: bir cevaba cevap verilirse ana yoruma bağlanır
+        var rootId = parent.ParentCommentId ?? parent.Id;
+
+        var reply = new InternshipComment
+        {
+            Id = Guid.NewGuid(),
+            InternshipId = internshipId,
+            UserId = userId,
+            ParentCommentId = rootId,
+            Content = content.Trim(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.InternshipComments.Add(reply);
+        await _context.SaveChangesAsync();
+
+        await _context.Entry(reply).Reference(c => c.User).LoadAsync();
+        reply.Reports = [];
+        reply.Reactions = [];
+
+        var output = _mapper.Map<CommentOutputModel>(reply);
+        output.IsOwn = true;
+        return output;
+    }
+
     public async Task<List<CommentOutputModel>> GetCommentsAsync(Guid internshipId, Guid? requestingUserId)
     {
-        var list = await _context.InternshipComments
+        var all = await _context.InternshipComments
             .Where(c => c.InternshipId == internshipId && !c.IsDeleted)
             .OrderBy(c => c.CreatedAt)
             .ProjectTo<CommentOutputModel>(_mapper.ConfigurationProvider, new { requestingUserId = requestingUserId ?? Guid.Empty })
             .ToListAsync();
 
-        return list;
+        // Ana yorumlar + altlarında cevapları. Ana yorumu silinmiş cevaplar gösterilmez.
+        var roots = all.Where(c => c.ParentCommentId == null).ToList();
+        var rootsById = roots.ToDictionary(c => c.Id);
+        foreach (var reply in all.Where(c => c.ParentCommentId != null))
+        {
+            if (rootsById.TryGetValue(reply.ParentCommentId!.Value, out var root))
+                root.Replies.Add(reply);
+        }
+
+        return roots;
     }
 
     public async Task<Result<CommentOutputModel>> UpdateCommentAsync(Guid userId, Guid commentId, string content)

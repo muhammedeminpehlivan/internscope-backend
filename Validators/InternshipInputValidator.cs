@@ -31,6 +31,9 @@ public class InternshipInputValidator : AbstractValidator<InternshipInputModel>
             .NotEmpty().WithMessage("Bitiş tarihi boş olamaz.")
             .GreaterThan(x => x.StartDate).WithMessage("Bitiş tarihi başlangıç tarihinden sonra olmalıdır.");
 
+        RuleFor(x => x.StudentYear)
+            .IsInEnum().WithMessage("Geçerli bir sınıf seçilmelidir (1-4. sınıf veya mezun).");
+
         RuleFor(x => x.StipendMin)
             .GreaterThanOrEqualTo(0).WithMessage("Minimum ücret negatif olamaz.")
             .When(x => x.StipendMin.HasValue);
