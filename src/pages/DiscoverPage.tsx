@@ -7,7 +7,6 @@ import CompanyLogo from '../components/CompanyLogo'
 interface InternshipReview {
   id: string | number
   companyName: string
-  companyLogo?: string
   sector: string
   rating: number | null
   companySlug?: string
@@ -96,7 +95,6 @@ export default function DiscoverPage() {
     {
       id: 1,
       companyName: 'Trendyol',
-      companyLogo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDihIWWomRLj2dVxH7JMCzWYifqdQeZ8ejjlaJeys_IB9gzkCzNIBNdGt_MnPj7_zO5RhTcv-KLFrHzeof0HbV6N6v9Qmkbz1weT1pN-JLERON6Bc3WrwbfPhOD2YFiP9kxySl3saG4y17bQ5aNcYOGQ2z7TiF5AQioUg7_wIei0XDZ_7_s1cT6v5tM_3Yzy66WDAKGmGK0oIv8k_YrlQ1Aep8gQOU6mkQTKN6F0k2081op3Vf-b93n',
       sector: 'Yazılım & Teknoloji',
       rating: 4.8,
       reviewCount: 124,
@@ -112,7 +110,6 @@ export default function DiscoverPage() {
     {
       id: 2,
       companyName: 'Aselsan',
-      companyLogo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBjZlivtnsrocvTj-UJWHs9oX3wXSXwqdNdVGdxJs1PBzWdOlm9z-Puy-7zrVhx7WbdsuXMrroQDlYpGn-OHnavHHlUiL6w-Zt0i5iSNfMZtEEoVQWoNt2S0768JYukdp-fY4n8Wm84WJ_OUzMYyRsrLMxvGXxO3SyNICSd442xULsSjPvc6YHkvLPrlBiObk64_e9LfIXLVqdlagoH7Q3Ht-L_OHNnFqD5yNFZNbueYoWvmBt-u9Fw',
       sector: 'Savunma Sanayi',
       rating: 4.5,
       reviewCount: 85,
@@ -128,7 +125,6 @@ export default function DiscoverPage() {
     {
       id: 3,
       companyName: 'Garanti BBVA Teknoloji',
-      companyLogo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEqlO6Y5M26eWFAuAH-xmi1O46r5uuKLzN3Mmu7be5_Sfglsdr3Lc3dxVgKUNTpb0vDaCNQ4IyQR8lgBNmcbzzKEdOxsW6ENxRRpPSi61zvUGjp6s7ZQHS4TguHgOEf8ETwjP7NB_99_2baVeCXnyISWuB9sdNTceNZ1HZwIv9vmMEXp77_ORLD17Ao3FEDnO3BW_ecEdZYh7ux9FT0Z2QYfdatJ2R_oikHxHDIAMZ_Ri0UVJe_hU1',
       sector: 'Finans & Bankacılık',
       rating: 4.2,
       reviewCount: 42,
@@ -189,7 +185,6 @@ export default function DiscoverPage() {
             return {
               id: internship.id,
               companyName: internship.companyName || 'Bilinmeyen Şirket',
-              companyLogo: internship.companyLogo,
               sector: internship.departmentName || 'Belirtilmemiş',
               rating: companyRating,
               reviewCount: internship.reviewCount || 0,
@@ -366,7 +361,7 @@ export default function DiscoverPage() {
                 {/* Kart başlığı ve firma puanı */}
                 <div className="flex items-start justify-between gap-3 p-6 pb-5 relative z-10">
                   <div className="flex items-center gap-3 min-w-0">
-                    <CompanyLogo name={item.companyName} logoUrl={item.companyLogo} className="w-14 h-14 rounded-xl shadow-sm shrink-0 border border-outline-variant/50" textClassName="text-base" />
+                    <CompanyLogo name={item.companyName} className="w-14 h-14 rounded-xl shadow-sm shrink-0 border border-outline-variant/50" textClassName="text-base" />
                     <div className="flex flex-col min-w-0 gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-display text-xl font-bold text-primary truncate">{item.companyName}</h3>

@@ -9,7 +9,6 @@ import CompanyLogo from '../components/CompanyLogo'
 interface InternshipDetail {
   id: string | number
   companyName: string
-  companyLogo?: string
   companyDepartment?: string
   authorName?: string
   userName?: string
@@ -698,7 +697,7 @@ export default function InternshipDetailPage() {
         <section className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-[0_18px_45px_rgba(0,0,0,0.22)] md:p-9">
           <div className="flex flex-col justify-between gap-6 border-b border-outline-variant/40 pb-7 md:flex-row md:items-start">
             <div className="flex items-center gap-4">
-              <CompanyLogo name={detail.companyName} logoUrl={detail.companyLogo} className="h-16 w-16 shrink-0 rounded-xl border border-outline-variant/50" textClassName="text-xl" />
+              <CompanyLogo name={detail.companyName} className="h-16 w-16 shrink-0 rounded-xl border border-outline-variant/50" textClassName="text-xl" />
               <div>
                 <div className="mb-1 flex flex-wrap items-center gap-2">
                   <h1 className="font-display text-3xl font-bold text-primary">{detail.companyName}</h1>

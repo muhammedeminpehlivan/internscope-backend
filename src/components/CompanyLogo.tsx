@@ -1,4 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+// logo.dev publishable key (pk_...). Tanımlı değilse sadece harf rozeti gösterilir.
+const LOGO_DEV_TOKEN = import.meta.env.VITE_LOGO_DEV_TOKEN as string | undefined
+
+// Şirket türü ekleri isimle aramayı bozuyor ("Dünya Katılım Bankası A.Ş" → "Dünya Katılım Bankası")
+const LEGAL_SUFFIX = /[\s,]+(a\.?\s?ş\.?|ltd\.?(\s*şti\.?)?|şti\.?|san\.?|tic\.?|ve|inc\.?|llc|gmbh|corp\.?|co\.?)\s*$/i
+
+function cleanCompanyName(name: string) {
+  let result = name.trim()
+  let prev
+  do {
+    prev = result
+    result = result.replace(LEGAL_SUFFIX, '').replace(/[\s.,-]+$/, '').trim()
+  } while (result !== prev && result)
+  return result
+}
+
+function getAutoLogoUrl(name: string) {
+  if (!LOGO_DEV_TOKEN) return undefined
+  const cleaned = cleanCompanyName(name)
+  if (cleaned.length < 2) return undefined
+  const params = new URLSearchParams({ token: LOGO_DEV_TOKEN, size: '128', format: 'png', retina: 'true', fallback: '404' })
+  return `https://img.logo.dev/name/${encodeURIComponent(cleaned)}?${params}`
+}
 
 // Tema paletiyle uyumlu, açık zeminde okunur harf-rozeti renkleri
 const PALETTE = [
@@ -24,17 +48,20 @@ function pickColor(name: string) {
 
 interface CompanyLogoProps {
   name?: string
-  logoUrl?: string
   /** Dış kutu: boyut + köşe + border sınıfları */
   className?: string
   /** Harf rozetinin yazı boyutu */
   textClassName?: string
 }
 
-export default function CompanyLogo({ name = '', logoUrl, className = '', textClassName = 'text-sm' }: CompanyLogoProps) {
-  const [failed, setFailed] = useState(false)
+export default function CompanyLogo({ name = '', className = '', textClassName = 'text-sm' }: CompanyLogoProps) {
   const safeName = name || ''
-  const showImage = !!logoUrl && !failed
+  // logo.dev'den isimle otomatik logo; bulunamazsa harf rozeti
+  const logoSrc = getAutoLogoUrl(safeName)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => setFailed(false), [logoSrc])
+
+  const showImage = !!logoSrc && !failed
   const color = pickColor(safeName)
 
   return (
@@ -43,8 +70,9 @@ export default function CompanyLogo({ name = '', logoUrl, className = '', textCl
     >
       {showImage ? (
         <img
-          src={logoUrl}
+          src={logoSrc}
           alt={safeName}
+          loading="lazy"
           className="w-full h-full object-contain p-1.5"
           onError={() => setFailed(true)}
         />

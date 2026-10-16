@@ -8,7 +8,6 @@ import CompanyLogo from '../components/CompanyLogo'
 interface FeaturedReview {
   id: string | number
   companyName: string
-  companyLogo: string
   role: string
   rating: number
   internRating?: number | null
@@ -59,7 +58,6 @@ export default function LandingPage() {
     {
       id: 1,
       companyName: 'Trendyol Tech',
-      companyLogo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDqtnmHpqgt8Iv4hlGkhWAO_wx_9MajIoyvHRXbb9NkMNuI2fOWauL40CKB_0v9fJEVypuNHb0m3X9vCxbZARCoQn8ZRFAEkqTB9FOWnFGA0HcWIvbAwzt1-xzunSOKukKg_hwq7jhDHNTEknkcfa35DnaJ4t9I4_vcJXL5GfyT4PU-j69nU_hXcMEg63PtJomSKyz3F4AE5ykYFdW5389U3GRTBzbbqZXdQSM_jTMEPdkObWU0p9DF5w',
       role: 'Software Engineering Intern',
       rating: 4.8,
       reviewSnippet: 'Sorumluluk almaktan çekinmiyorsanız harika bir ortam. Mentörlük sistemi çok güçlü, production ortamına kod atmak ilk haftadan mümkün...',
@@ -70,7 +68,6 @@ export default function LandingPage() {
     {
       id: 2,
       companyName: 'Aselsan',
-      companyLogo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDS7iHy9sykSYUInDWh98nI4BEt6TVfAMFhxzDvRB-cYSx_uAhZ6-i6PEKvGInW875wWTxp5ZZUJYcKx-zYIeyz3wExeSgqp_xsOQcVmIUNzT-m1h3O-qpyub0Yubgi0gm6eJz5TEsSTznMukt7Y8p3iBUonLPBrgn37SVAq4pEeKSAIHwz7k4KQNaEAknT4HHWTrEeN2LwvNbL1QG4VCv4OAM9safdpe4VGP0P0Jnc1H0UTLq0MZJ2Aw',
       role: 'Aday Mühendis',
       rating: 4.5,
       reviewSnippet: 'Kurumsal kültür çok derin. Süreçler biraz yavaş işlese de, üzerinde çalışılan projelerin ölçeği ve teknik altyapı muazzam bir tecrübe katıyor.',
@@ -81,7 +78,6 @@ export default function LandingPage() {
     {
       id: 3,
       companyName: 'Garanti BBVA',
-      companyLogo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDwkd_BCt8M7ahyuRyWSlYNYAEQVzErRan01yO0jT7g3U09GKNGn-DjmOWYr0GyYUHDKO8wBWmL_cLX54mtCNdWTagi-30y_8P3WWQNWx77aOJqIL3dhp3Z-MJl5V2MRF2Mqxv7_XsNFEiLBEWPz0avjJXyXjAW7TTy2Hy03gCXGTE6DPPaRvLGGUFRE7DeqQdOt-W_xGcjtS04yTIzggWwRn7mYfDx_CxVN7rQ8b3IxLardqqZKqT7Rg',
       role: 'Veri Analisti Stajyeri',
       rating: 4.2,
       reviewSnippet: 'Finans sektörünün dinamiklerini anlamak için iyi bir başlangıç. Kullanılan toollar biraz eski olsa da, veri seti büyüklüğü gerçek hayat problemleri sunuyor.',
@@ -163,7 +159,6 @@ export default function LandingPage() {
                 return {
             id: internship.id,
                 companyName: name,
-            companyLogo: internship.companyLogo || '',
             role: internship.companyDepartment || 'Stajyer',
                 rating: companyRating ?? 0,
                 companyRating,
@@ -356,7 +351,7 @@ export default function LandingPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <CompanyLogo name={card.companyName} logoUrl={card.companyLogo} className="h-11 w-11 shrink-0 rounded-lg border border-outline-variant/50" textClassName="text-sm" />
+                    <CompanyLogo name={card.companyName} className="h-11 w-11 shrink-0 rounded-lg border border-outline-variant/50" textClassName="text-sm" />
                     <div className="min-w-0">
                       <h3 className="truncate font-display text-lg font-bold leading-tight text-primary">{card.companyName}</h3>
                       <p className="mt-1 truncate font-label text-label-sm tracking-wide text-on-surface-variant">{card.role}</p>
