@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Toast from './components/Toast'
+import Footer from './components/Footer'
 import LandingPage from './pages/LandingPage'
 import EmailVerificationPage from './pages/EmailVerificationPage'
 import DiscoverPage from './pages/DiscoverPage'
@@ -68,6 +69,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/discover" replace />} />
           </Routes>
         </div>
+
+        <Footer />
       </div>
     </BrowserRouter>
   )

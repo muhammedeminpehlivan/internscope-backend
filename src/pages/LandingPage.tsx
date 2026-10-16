@@ -452,39 +452,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 5. FOOTER */}
-        <footer className="w-full bg-surface-container-low border-t border-outline-variant/40 py-12 mt-8">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-10 flex flex-col md:flex-row justify-between items-start gap-8">
-            <div className="max-w-md">
-              <div className="flex items-center gap-2 mb-3">
-                <img src="/logo.png" alt="Staj'ın Logo" className="h-9 w-auto object-contain" />
-              </div>
-              <p className="text-on-surface-variant font-body text-xs leading-relaxed">
-                Ekip, iş yükü, öğrenme fırsatları... Stajyerlerin gözünden şirketleri keşfet.
-              </p>
-            </div>
-
-            <div className="flex gap-12 font-label">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-bold text-on-surface mb-1">Arşiv</span>
-                <Link to="/discover" className="text-xs text-on-surface-variant hover:text-secondary transition-colors">Koleksiyonlar</Link>
-                <Link to="/discover" className="text-xs text-on-surface-variant hover:text-secondary transition-colors">Doğrulama</Link>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-bold text-on-surface mb-1">Kurumsal</span>
-                <a href="#" className="text-xs text-on-surface-variant hover:text-secondary transition-colors">Hakkımızda</a>
-                <a href="#" className="text-xs text-on-surface-variant hover:text-secondary transition-colors">İletişim</a>
-              </div>
-            </div>
-          </div>
-
-          <div className="max-w-[1200px] mx-auto px-6 md:px-10 mt-10 pt-6 border-t border-outline-variant/40 text-center">
-            <span className="text-[11px] text-on-surface-variant font-label tracking-tight">
-              © 2026 Staj'ın • Staj Değerlendirme Platformu • Tüm Hakları Saklıdır
-            </span>
-          </div>
-        </footer>
-
       </div>
     </main>
   )
